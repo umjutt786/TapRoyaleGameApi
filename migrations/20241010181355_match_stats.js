@@ -6,6 +6,7 @@ exports.up = function(knex) {
         table.integer('kills').defaultTo(0);
         table.float('damage_dealt').defaultTo(0.0);
         table.boolean('is_winner').defaultTo(false);
+        table.boolean('is_bot').defaultTo(false); 
         table.timestamps(true, true);
     });
 };

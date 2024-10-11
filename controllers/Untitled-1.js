@@ -4,7 +4,7 @@ const Player = require('../models/User');
 
 let games = {};
 let botCounter = -1;
-const MAX_PLAYERS = 30;
+const MAX_PLAYERS = 5;
 const INITIAL_HEALTH = 100;
 const BOT_JOIN_DELAY = 30000;
 const BOT_ATTACK_MIN_DELAY = 2000;
@@ -149,22 +149,13 @@ const startGame = (gameId) => {
 };
 
 // Function to handle player attacks
-const playerAttack = async (gameId, attackerId, targetId) => {
+const playerAttack = async (gameId, attackerId) => {
     const game = games[gameId];
-    console.log("Request : " + attackerId);
-    if (!game || !game.health[attackerId]) {
-        console.log(`Game or player not found: Game ID: ${gameId}, Attacker ID: ${attackerId}`);
-        return { error: 'Game or player not found' };
-    }
+    if (!game || !game.health[attackerId]) return { error: 'Game or player not found' };
 
-    // Check if the opponent exists and has health > 0
-    const opponent = game.players.find(player => player.id === targetId && game.health[player.id] > 0);
-    if (!opponent) {
-        console.log(`No opponent found for Target ID: ${targetId} in Game ID: ${gameId}`);
-        return { error: 'No opponent found' };
-    }
+    const opponent = game.players.find(player => player.id !== attackerId && game.health[player.id] > 0);
+    if (!opponent) return { error: 'No opponent found' };
 
-    // Execute attack logic
     game.health[opponent.id] -= 20;
     game.stats[attackerId].damage_dealt += 20;
 
@@ -175,7 +166,6 @@ const playerAttack = async (gameId, attackerId, targetId) => {
         { where: { player_id: attackerId, game_id: gameId } }
     );
 
-    // Check for elimination
     if (game.health[opponent.id] <= 0) {
         game.stats[attackerId].kills += 1;
         console.log(`Player ${attackerId} eliminated ${opponent.id}`);
@@ -188,12 +178,6 @@ const playerAttack = async (gameId, attackerId, targetId) => {
 
     return { attackerId, opponentId: opponent.id, opponentHealth: game.health[opponent.id] };
 };
-
-
-
-
-
-
 
 // Function to check for winners
 const checkForWinner = async (gameId) => {

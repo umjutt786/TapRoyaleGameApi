@@ -27,36 +27,59 @@ io.on('connection', (socket) => {
     console.log('A player connected');
 
     // Join game event with userId and gameId
-    socket.on('joinGame', async ({ userId, gameId }) => {
-        const player = await GameController.joinGame(userId);
-        if (player.error) {
-            socket.emit('error', player.error); // Notify player if there was an error
-        } else {
-            socket.playerId = player.id; // Store the playerId in the socket session
-            socket.join(gameId); // Join socket room for the game
-            io.to(gameId).emit('playerJoined', player); // Notify all players in game
+socket.on('joinGame', async ({ userId, gameId }) => {
+    const player = await GameController.joinGame(userId);
+    if (player.error) {
+        socket.emit('error', player.error); // Notify player if there was an error
+    } else {
+        socket.playerId = player.id; // Store the playerId in the socket session
+        console.log(`Player ${player.id} joined game ${gameId}`); // Debug log to confirm player joined
+        socket.join(gameId); // Join socket room for the game
+        io.to(gameId).emit('playerJoined', player); // Notify all players in game
 
-            // Check if game is full (2 players for now)
-            const game = await GameController.getGameById(gameId);
-            if (game.players.length === 2) {
-                io.to(gameId).emit('gameReady', { gameId }); // Notify players game is ready
-                GameController.startGame(gameId); // Start the game
-            }
+        // Get the current game state and check the number of players
+        const game = await GameController.getGameById(gameId);
+        
+        // Update this to 5 if your game needs 5 players to start
+        if (game.players.length === 30) {
+            io.to(gameId).emit('gameReady', { gameId }); // Notify players game is ready
+            GameController.startGame(gameId); // Start the game
         }
-    });
+    }
+});
 
-    // Attack event
-    socket.on('attack', async () => {
-        const playerId = socket.playerId; // Use the playerId stored in the socket session
-        const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id); // Get the gameId
+    
+// Attack event
+socket.on('attack', async (data) => {
+    const playerId = socket.playerId; // Retrieve the playerId from the socket session
+    console.log(`Player ID from socket: ${playerId}`); // Debugging log
 
-        const result = await GameController.playerAttack(gameId, playerId);
-        if (result.error) {
-            socket.emit('error', result.error);
-        } else {
-            io.to(gameId).emit('playerAttacked', result); // Broadcast attack result to all players
-        }
-    });
+    if (!playerId) {
+        return socket.emit('error', 'Player ID is not set.');
+    }
+
+    const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id); // Get the gameId
+    console.log(`Game ID from socket rooms: ${gameId}`); // Debugging log
+
+    if (!gameId) {
+        return socket.emit('error', 'Game ID not found.');
+    }
+
+    const targetId = data.targetId; // Get targetId from the incoming data
+    console.log(`Player ${playerId} is attacking target ${targetId} in game ${gameId}`); // Debugging log
+
+    // Call the playerAttack method with attackerId and targetId
+    const result = await GameController.playerAttack(gameId, playerId, targetId);
+
+    if (result.error) {
+        socket.emit('error', result.error);
+    } else {
+        io.to(gameId).emit('playerAttacked', result); // Notify all players in the game
+    }
+});
+
+
+
 
     // When a player disconnects
     socket.on('disconnect', () => {

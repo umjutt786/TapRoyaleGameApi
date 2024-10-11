@@ -22,6 +22,10 @@ const MatchStat = sequelize.define('MatchStat', {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
     },
+    is_bot: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
 }, {
     timestamps: true,
     underscored: true,
