@@ -1,6 +1,8 @@
 const MatchStat = require('../models/MatchStat');
 const Game = require('../models/Game');
 const Player = require('../models/User');
+const PlayerGameLoadout = require('../models/PlayerGameLoadout');
+const Loadout = require('../models/Loadout');
 
 let games = {};
 let botCounter = -1;
@@ -81,14 +83,31 @@ const startBotActions = (gameId) => {
 const botAttack = async (gameId, botId, opponentId) => {
     const game = games[gameId];
     if (!game || !game.health[botId]) return;
+    const opponentLoadout = await getLoadoutForPlayer(opponentId, gameId); // Fetch loadout for the player
+    console.log("LoadOut:" + opponentLoadout);
+    let damageDealt = 20;
+    if(opponentLoadout){
+        if (opponentLoadout.prevents_damage) {
+            console.log(`Opponent ${opponentId} has a Shield Loadout. Bot does not deal damage.`);
+            return { error: 'Opponent cannot take damage due to Shield Loadout' };
+        }
+        if (opponentLoadout.thief_effect) {
+            console.log(`Opponent ${opponentId} has a Thief Loadout. Opponent loses money.`);
+            // Implement logic to deduct money from the opponent
+            // For example: deductMoney(opponentId, 2);
+        }
+        if (opponentLoadout.money_multiplier > 1.0) {
+            damageDealt *= opponentLoadout.money_multiplier; // Apply the multiplier
+            console.log(`Opponent ${opponentId} earns double money. Damage dealt: ${damageDealt}`);
+        }
+    }
 
-    game.health[opponentId] -= 20;
-    game.stats[botId].damage_dealt += 20;
+    game.health[opponentId] -= damageDealt;
+    game.stats[botId].damage_dealt += damageDealt;
 
-    console.log(`Bot ${botId} attacked ${opponentId}. Opponent health: ${game.health[opponentId]}`);
 
     await MatchStat.increment(
-        { damage_dealt: 20 },
+        { damage_dealt: damageDealt },
         { where: { player_id: botId, game_id: gameId } }
     );
 
@@ -149,9 +168,54 @@ const startGame = (gameId) => {
 };
 
 // Function to handle player attacks
+// const playerAttack = async (gameId, attackerId, targetId) => {
+//     const game = games[gameId];
+//     console.log("Request : " + attackerId);
+//     if (!game || !game.health[attackerId]) {
+//         console.log(`Game or player not found: Game ID: ${gameId}, Attacker ID: ${attackerId}`);
+//         return { error: 'Game or player not found' };
+//     }
+
+//     // Check if the opponent exists and has health > 0
+//     const opponent = game.players.find(player => player.id === targetId && game.health[player.id] > 0);
+//     if (!opponent) {
+//         console.log(`No opponent found for Target ID: ${targetId} in Game ID: ${gameId}`);
+//         return { error: 'No opponent found' };
+//     }
+
+//     // Execute attack logic
+//     game.health[opponent.id] -= 20;
+//     game.stats[attackerId].damage_dealt += 20;
+
+//     console.log(`Player ${attackerId} attacked ${opponent.id}. Opponent health: ${game.health[opponent.id]}`);
+
+//     await MatchStat.increment(
+//         { damage_dealt: 20 },
+//         { where: { player_id: attackerId, game_id: gameId } }
+//     );
+
+//     // Check for elimination
+//     if (game.health[opponent.id] <= 0) {
+//         game.stats[attackerId].kills += 1;
+//         console.log(`Player ${attackerId} eliminated ${opponent.id}`);
+//         await MatchStat.increment(
+//             { kills: 1 },
+//             { where: { player_id: attackerId, game_id: gameId } }
+//         );
+//         checkForWinner(gameId);
+//     }
+
+//     return { attackerId, opponentId: opponent.id, opponentHealth: game.health[opponent.id] };
+// };
+
+// Function to handle player attacks
 const playerAttack = async (gameId, attackerId, targetId) => {
     const game = games[gameId];
+
+    // Fetch the attacker's loadout from the database using both playerId and gameId
+    const attackerLoadout = await getLoadoutForPlayer(targetId, gameId); // Pass gameId here
     console.log("Request : " + attackerId);
+    
     if (!game || !game.health[attackerId]) {
         console.log(`Game or player not found: Game ID: ${gameId}, Attacker ID: ${attackerId}`);
         return { error: 'Game or player not found' };
@@ -159,19 +223,43 @@ const playerAttack = async (gameId, attackerId, targetId) => {
 
     // Check if the opponent exists and has health > 0
     const opponent = game.players.find(player => player.id === targetId && game.health[player.id] > 0);
+    
     if (!opponent) {
         console.log(`No opponent found for Target ID: ${targetId} in Game ID: ${gameId}`);
         return { error: 'No opponent found' };
     }
 
+    // Loadout Effects
+    let damageDealt = 20; // Base damage
+    if (attackerLoadout) {
+        // Check if the attacker has a shield loadout
+        if (attackerLoadout.prevents_damage) {
+            console.log(`Player ${attackerId} has a Shield Loadout. Opponent does not deal damage.`);
+            return { error: 'Opponent cannot deal damage due to Shield Loadout' };
+        }
+
+        // Check if the attacker has a Thief Loadout
+        if (attackerLoadout.thief_effect) {
+            console.log(`Player ${attackerId} has a Thief Loadout. Attacker loses money.`);
+            // Implement logic to deduct money from attacker
+            // For example: deductMoney(attackerId, 2);
+        }
+
+        // Check if the attacker has a Money Multiplier Loadout
+        if (attackerLoadout.money_multiplier > 1.0) {
+            damageDealt *= attackerLoadout.money_multiplier; // Apply the multiplier
+            console.log(`Player ${attackerId} earns double money. Damage dealt: ${damageDealt}`);
+        }
+    }
+
     // Execute attack logic
-    game.health[opponent.id] -= 20;
-    game.stats[attackerId].damage_dealt += 20;
+    game.health[opponent.id] -= damageDealt;
+    game.stats[attackerId].damage_dealt += damageDealt;
 
     console.log(`Player ${attackerId} attacked ${opponent.id}. Opponent health: ${game.health[opponent.id]}`);
 
     await MatchStat.increment(
-        { damage_dealt: 20 },
+        { damage_dealt: damageDealt },
         { where: { player_id: attackerId, game_id: gameId } }
     );
 
@@ -188,6 +276,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
 
     return { attackerId, opponentId: opponent.id, opponentHealth: game.health[opponent.id] };
 };
+
 
 
 
@@ -228,10 +317,41 @@ const endGame = async (gameId, winnerId) => {
     delete games[gameId];
 };
 
+const getLoadoutForPlayer = async (playerId, gameId) => {
+    try {
+        // Query PlayerGameLoadout to find the entry by player_id and game_id
+        const playerGameLoadout = await PlayerGameLoadout.findOne({
+            where: {
+                player_id: playerId,
+                game_id: gameId,
+            },
+            include: {
+                model: Loadout,
+                as: 'loadout', // Use the alias defined in the PlayerGameLoadout model
+            },
+        });
+
+        // Check if entry exists
+        if (!playerGameLoadout) {
+            return { message: 'No loadout found for the specified player and game.' };
+        }
+
+        // Return the loadout information
+        return playerGameLoadout.loadout; // Return the associated loadout
+    } catch (error) {
+        console.error('Error fetching loadout:', error);
+        throw error; // Handle error as needed
+    }
+};
+
+
+
+
 module.exports = {
     createGame,
     joinGame,
     playerAttack,
     startGame,
-    endGame
+    endGame,
+    getLoadoutForPlayer
 };

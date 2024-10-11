@@ -5,9 +5,21 @@ const authRoutes = require('./routes/authRoutes'); // Import auth routes
 const countryRoutes = require('./routes/countryRoutes'); // Import country routes
 const responseFormatter = require('./middlewares/responseFormatter'); // Import response formatter
 const gameRoutes = require('./routes/gameRoutes');
+const loadoutsRoute = require('./routes/loadouts');
 const http = require('http');
 const socketIo = require('socket.io');
 const GameController = require('./controllers/GameController'); // Import GameController for socket use
+const playerGameLoadoutsRoute = require('./routes/playerGameLoadouts');
+const Loadout = require('./models/Loadout');
+const PlayerGameLoadout = require('./models/PlayerGameLoadout');
+
+
+// Define associations
+Loadout.hasMany(PlayerGameLoadout, {
+    foreignKey: 'loadout_id',
+    as: 'playerGameLoadouts',
+});
+
 
 dotenv.config();
 
@@ -20,7 +32,10 @@ const io = socketIo(server);
 
 app.use('/api/auth', authRoutes); // Use auth routes
 app.use('/api/countries', countryRoutes); // Use country routes
+app.use('/api/loadouts', loadoutsRoute);
 app.use('/api/games', gameRoutes); // Use game routes
+app.use('/api/games', playerGameLoadoutsRoute); // Use player game loadouts route
+
 
 // Socket connection logic
 io.on('connection', (socket) => {
