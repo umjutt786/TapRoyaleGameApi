@@ -9,6 +9,7 @@ const loadoutsRoute = require('./routes/loadouts');
 const http = require('http');
 const socketIo = require('socket.io');
 const GameController = require('./controllers/GameController'); // Import GameController for socket use
+const deathMatchRoute = require('./routes/deathMatchRoutes'); // Import GameController for socket use
 const playerGameLoadoutsRoute = require('./routes/playerGameLoadouts');
 const Loadout = require('./models/Loadout');
 const PlayerGameLoadout = require('./models/PlayerGameLoadout');
@@ -35,6 +36,7 @@ app.use('/api/countries', countryRoutes); // Use country routes
 app.use('/api/loadouts', loadoutsRoute);
 app.use('/api/games', gameRoutes); // Use game routes
 app.use('/api/games', playerGameLoadoutsRoute); // Use player game loadouts route
+app.use('/api/games', deathMatchRoute); // Use player game loadouts route
 
 
 // Socket connection logic
