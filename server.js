@@ -13,6 +13,7 @@ const deathMatchRoute = require('./routes/deathMatchRoutes'); // Import GameCont
 const playerGameLoadoutsRoute = require('./routes/playerGameLoadouts');
 const Loadout = require('./models/Loadout');
 const PlayerGameLoadout = require('./models/PlayerGameLoadout');
+// const io = new socketIo(server);
 
 
 // Define associations

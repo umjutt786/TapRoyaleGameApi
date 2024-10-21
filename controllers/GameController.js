@@ -158,7 +158,6 @@ const joinGame = async (userId) => {
         is_winner: false
     });
     const loadouts = await Loadout.findAll();
-    // Initialize player stats and health
     games[currentGameId].stats[userId] = { kills: 0, damage_dealt: 0 };
     games[currentGameId].health[userId] = INITIAL_HEALTH;
     games[currentGameId].players.push({ id: userId });

@@ -22,6 +22,10 @@ const Loadout = sequelize.define('Loadout', {
         type: DataTypes.DECIMAL(10, 2),
         defaultValue: 1.0,
     },
+    price: {
+        type: DataTypes.INTEGER,
+        defaultValue: 50,
+    },
 }, {
     timestamps: true,
     underscored: true,
