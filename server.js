@@ -42,30 +42,6 @@ app.use('/api/games', deathMatchRoute); // Use player game loadouts route
 // Socket connection logic
 io.on('connection', (socket) => {
     console.log('A player connected');
-// socket.on('joinGame', async ({ userId, gameId }) => {
-//     const player = await GameController.joinGame(userId);
-//     if (player.error) {
-//         socket.emit('error', player.error); // Notify player if there was an error
-//     } else {
-//         socket.playerId = player.id; // Store the playerId in the socket session
-//         console.log(`Player ${player.id} joined game ${gameId}`); // Debug log to confirm player joined
-//         socket.join(gameId); // Join socket room for the game
-//         io.to(gameId).emit('playerJoined', player); // Notify all players in game
-
-//         // Get the current game state and check the number of players
-//         const game = await GameController.getGameById(gameId);
-        
-//         // Update this to 5 if your game needs 5 players to start
-//         if (game.players.length === 30) {
-//             io.to(gameId).emit('gameReady', { gameId }); // Notify players game is ready
-//             GameController.startGame(gameId); // Start the game
-//         }
-//     }
-// });
-
-    
-// Attack event
-
 socket.on('joinGame', async ({ userId }) => {
     const player = await GameController.joinGame(userId);
     
@@ -81,13 +57,10 @@ socket.on('joinGame', async ({ userId }) => {
 
         // Notify all players in the game about the new player
         io.to(player.gameId).emit('playerJoined', player); 
-
-        // Get the current game state and check the number of players
-        const game = await GameController.getGameById(player.gameId);
-
-        if (game.players.length === 30) {
-            io.to(player.gameId).emit('gameReady', { gameId: player.gameId }); // Notify all players game is ready
-            GameController.startGame(player.gameId); // Start the game
+        games[gameId].players.push({ userId, socketId: socket.id });
+        if (games[gameId].players.length === MAX_PLAYERS) {
+            console.log(`Game ${gameId} is ready to start!`);
+            io.to(gameId).emit('gameReady', { gameId });
         }
     }
 });
@@ -101,7 +74,7 @@ socket.on('attack', async (data) => {
         return socket.emit('error', 'Player ID is not set.');
     }
 
-    const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id); // Get the gameId
+    const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id);
     console.log(`Game ID from socket rooms: ${gameId}`); // Debugging log
 
     if (!gameId) {
