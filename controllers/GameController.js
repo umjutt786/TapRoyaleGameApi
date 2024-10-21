@@ -3,6 +3,8 @@ const Game = require('../models/Game');
 const Player = require('../models/User');
 const PlayerGameLoadout = require('../models/PlayerGameLoadout');
 const Loadout = require('../models/Loadout');
+const socketManager = require('../socket'); // Import the socket manager
+
 
 let games = {};
 let botCounter = -1;
@@ -123,7 +125,6 @@ const botAttack = async (gameId, botId, opponentId) => {
 };
 
 const joinGame = async (userId) => {
-    // Find a game that is not full (less than MAX_PLAYERS)
     let currentGameId = Object.keys(games).find(gameId => games[gameId].players.length < MAX_PLAYERS);
 
     // If no game is available, create a new game
@@ -171,9 +172,13 @@ const joinGame = async (userId) => {
 
 // Function to start the game
 const startGame = (gameId) => {
+    const io = socketManager.getIo(); // Get the io instance
     const game = games[gameId];
     console.log(`Game ${gameId} started with players:`, game.players);
-    // Additional logic to handle game starting
+    io.to(gameId).emit('gameStarted', {
+        message: `Game ${gameId} has started!`,
+        players: game.players,
+    });
 };
 
 // Function to handle player attacks

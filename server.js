@@ -13,8 +13,7 @@ const deathMatchRoute = require('./routes/deathMatchRoutes'); // Import GameCont
 const playerGameLoadoutsRoute = require('./routes/playerGameLoadouts');
 const Loadout = require('./models/Loadout');
 const PlayerGameLoadout = require('./models/PlayerGameLoadout');
-// const io = new socketIo(server);
-
+const socketManager = require('./socket');
 
 // Define associations
 Loadout.hasMany(PlayerGameLoadout, {
@@ -30,15 +29,14 @@ const app = express();
 app.use(express.json()); // Parse JSON bodies
 app.use(responseFormatter); // Use response formatter middleware
 const server = http.createServer(app);
-const io = socketIo(server);
-
 app.use('/api/auth', authRoutes); // Use auth routes
 app.use('/api/countries', countryRoutes); // Use country routes
 app.use('/api/loadouts', loadoutsRoute);
 app.use('/api/games', gameRoutes); // Use game routes
 app.use('/api/games', playerGameLoadoutsRoute); // Use player game loadouts route
 app.use('/api/games', deathMatchRoute); // Use player game loadouts route
-
+const io = socketIo(server);
+socketManager.setIo(io); // Set the io instance
 
 // Socket connection logic
 io.on('connection', (socket) => {
@@ -55,14 +53,6 @@ socket.on('joinGame', async ({ userId }) => {
 
         // Emit to the player who just joined, sending back the gameId
         socket.emit('gameJoined', { gameId: player.gameId,playerStats:player.playerStats,loadouts:player.loadouts,games:player.games });
-
-        // Notify all players in the game about the new player
-        // io.to(player.gameId).emit('playerJoined', player); 
-        // games[gameId].players.push({ userId, socketId: socket.id });
-        // if (games[gameId].players.length === MAX_PLAYERS) {
-        //     console.log(`Game ${gameId} is ready to start!`);
-        //     io.to(gameId).emit('gameReady', { gameId });
-        // }
     }
 });
 
