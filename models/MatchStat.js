@@ -26,6 +26,22 @@ const MatchStat = sequelize.define('MatchStat', {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
     },
+    assist: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+    },
+    rank: {
+        type: DataTypes.INTEGER,
+        defaultValue: 1,
+    },
+    health: {
+        type: DataTypes.INTEGER,
+        defaultValue: 100,
+    },
+    death: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+    },
 }, {
     timestamps: true,
     underscored: true,
