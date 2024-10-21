@@ -13,26 +13,6 @@ router.post('/death-match/create', async (req, res) => {
     }
 });
 
-// Route to join a game
-// router.post('/death-match/join', async (req, res) => {
-//     const { userId } = req.body;
-    
-//     if (!userId) {
-//         return res.status(400).json({ error: 'User ID is required' });
-//     }
-
-//     try {
-//         const result = await gameController.joinGame(userId);
-//         if (result.error) {
-//             return res.status(400).json(result);
-//         }
-//         res.status(200).json(result);
-//     } catch (error) {
-//         console.error("Error joining game:", error);
-//         res.status(500).json({ error: 'Failed to join game' });
-//     }
-// });
-
 router.post('/death-match/:gameId/join', async (req, res) => {
     const { userId } = req.body;
     const { gameId } = req.params;
@@ -52,48 +32,6 @@ router.post('/death-match/:gameId/join', async (req, res) => {
         res.status(500).json({ error: 'Failed to join game' });
     }
 });
-
-
-// Route to handle player attack
-// router.post('/death-match/attack', async (req, res) => {
-//     const { gameId, attackerId, targetId } = req.body;
-
-//     if (!gameId || !attackerId || !targetId) {
-//         return res.status(400).json({ error: 'Game ID, Attacker ID, and Target ID are required' });
-//     }
-
-//     try {
-//         const result = await gameController.playerAttack(gameId, attackerId, targetId);
-//         if (result.error) {
-//             return res.status(400).json(result);
-//         }
-//         res.status(200).json(result);
-//     } catch (error) {
-//         console.error("Error handling attack:", error);
-//         res.status(500).json({ error: 'Failed to handle attack' });
-//     }
-// });
-
-
-// router.post('/death-match/:gameId/attack', async (req, res) => {
-//     const { attackerId, targetId } = req.body;
-//     const { gameId } = req.params;  // gameId is now passed as a route parameter
-
-//     if (!gameId || !attackerId || !targetId) {
-//         return res.status(400).json({ error: 'Game ID, Attacker ID, and Target ID are required' });
-//     }
-
-//     try {
-//         const result = await gameController.playerAttack(gameId, attackerId, targetId);
-//         if (result.error) {
-//             return res.status(400).json(result);
-//         }
-//         res.status(200).json(result);
-//     } catch (error) {
-//         console.error("Error handling attack:", error);
-//         res.status(500).json({ error: 'Failed to handle attack' });
-//     }
-// });
 
 router.post('/death-match/:gameId/attack', async (req, res) => {
     const { attackerId, targetId } = req.body;

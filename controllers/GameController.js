@@ -122,43 +122,53 @@ const botAttack = async (gameId, botId, opponentId) => {
     }
 };
 
-// Function to handle player joining the game
 const joinGame = async (userId) => {
+    // Find a game that is not full (less than MAX_PLAYERS)
     let currentGameId = Object.keys(games).find(gameId => games[gameId].players.length < MAX_PLAYERS);
+
+    // If no game is available, create a new game
     if (!currentGameId) {
-        currentGameId = await createGame();
+        currentGameId = await createGame(); // Create a new game if none is available
     }
 
+    // Fetch the user to check if they exist
     const user = await Player.findOne({ where: { id: userId } });
     if (!user) {
         return { error: 'User not found' };
     }
 
-    const playerCount = await MatchStat.count({ where: { game_id: currentGameId } });
-    if (playerCount >= MAX_PLAYERS) {
-        return { error: 'Game is full' };
-    }
-
+    // Ensure the player is not already in the game
     const existingStat = await MatchStat.findOne({ where: { player_id: userId, game_id: currentGameId } });
     if (existingStat) {
         return { error: 'Player is already in the game' };
     }
 
-    await MatchStat.create({
+    // Check the current player count in the game
+    const playerCount = await MatchStat.count({ where: { game_id: currentGameId } });
+    if (playerCount >= MAX_PLAYERS) {
+        return { error: 'Game is full' }; // If game is full, return error
+    }
+
+    // Add the player to the game
+    const playerStats =  await MatchStat.create({
         player_id: userId,
         game_id: currentGameId,
         kills: 0,
         damage_dealt: 0,
         is_winner: false
     });
-
+    const loadouts = await Loadout.findAll();
+    // Initialize player stats and health
     games[currentGameId].stats[userId] = { kills: 0, damage_dealt: 0 };
     games[currentGameId].health[userId] = INITIAL_HEALTH;
     games[currentGameId].players.push({ id: userId });
 
     console.log(`Player ${userId} joined game ${currentGameId}`);
-    return { id: userId, health: INITIAL_HEALTH };
+    
+    // Return the player details along with the current gameId
+    return { id: userId, gameId: currentGameId, playerStats: playerStats,loadouts:loadouts};
 };
+
 
 // Function to start the game
 const startGame = (gameId) => {
@@ -344,7 +354,22 @@ const getLoadoutForPlayer = async (playerId, gameId) => {
     }
 };
 
-
+const getGameById = async(gameId) =>{
+    try {
+        // Assuming you have a Game model that interacts with the database
+        const game = await Game.findOne(gameId);
+        
+        if (!game) {
+            return { error: 'Game not found' };
+        }
+    
+        // Return the game details, including the players
+        return game;
+    } catch (error) {
+        console.error(`Error fetching game by ID: ${error.message}`);
+        return { error: 'Error fetching game' };
+    }
+};
 
 
 module.exports = {
@@ -353,5 +378,6 @@ module.exports = {
     playerAttack,
     startGame,
     endGame,
-    getLoadoutForPlayer
+    getLoadoutForPlayer,
+    getGameById
 };

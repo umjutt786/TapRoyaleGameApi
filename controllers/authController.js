@@ -17,7 +17,7 @@ exports.register = async (req, res) => {
         user = await User.create({ username, country_id });
 
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.sendResponse({ token: token }, 'User registered successfully');
+        res.sendResponse({ token: token, user:user }, 'User registered successfully');
     } catch (error) {
         console.error('Error during login:', error);
         res.sendError('Error creating user', 500);
@@ -32,7 +32,7 @@ exports.login = async (req, res) => {
         if (!user) return res.sendResponse(null, 'Invalid username', 400);;
 
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.sendResponse({ token: token }, 'Login successful');
+        res.sendResponse({ token: token,user:user  }, 'Login successful');
     } catch (error) {
         res.sendError('Login failed', 401);
     }
