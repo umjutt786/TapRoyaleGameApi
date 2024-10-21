@@ -170,11 +170,11 @@ const joinGame = async (userId, gameId) => {
 
 // Function to start the game
 const startGame = (gameId) => {
-    const game = games[gameId];
-    console.log(`Game ${gameId} started with players:`, game.players);
-    game.startTime = Date.now();
-    game.timer = setTimeout(() => endGame(gameId, null), GAME_DURATION);
-};x
+  const game = games[gameId]
+  console.log(`Game ${gameId} started with players:`, game.players)
+  game.startTime = Date.now()
+  game.timer = setTimeout(() => endGame(gameId, null), GAME_DURATION)
+}
 
 const playerAttack = async (gameId, attackerId, targetId) => {
     const game = games[gameId];
