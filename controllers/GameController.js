@@ -166,7 +166,7 @@ const joinGame = async (userId) => {
     console.log(`Player ${userId} joined game ${currentGameId}`);
     
     // Return the player details along with the current gameId
-    return { id: userId, gameId: currentGameId, playerStats: playerStats,loadouts:loadouts};
+    return { id: userId, gameId: currentGameId, playerStats: playerStats,loadouts:loadouts,games:games};
 };
 
 
