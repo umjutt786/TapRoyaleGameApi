@@ -81,7 +81,9 @@ socket.on('attack', async (data) => {
     if (result.error) {
         socket.emit('error', result.error);
     } else {
-        io.to(gameId).emit('playerAttacked', result.game);
+        io.to(gameId).emit('playerAttacked', {
+            game:result.game
+        });
     }
 });
 

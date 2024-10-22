@@ -122,6 +122,9 @@ const botAttack = async (gameId, botId, opponentId) => {
         );
         checkForWinner(gameId);
     }
+    io.to(gameId).emit('playerAttacked', {
+        game: game,
+    });
 };
 
 const joinGame = async (userId) => {
