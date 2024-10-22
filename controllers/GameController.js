@@ -177,7 +177,7 @@ const startGame = (gameId) => {
     console.log(`Game ${gameId} started with players:`, game.players);
     io.to(gameId).emit('gameStarted', {
         message: `Game ${gameId} has started!`,
-        players: game.players,
+        game: game,
     });
 };
 
