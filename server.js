@@ -58,28 +58,30 @@ socket.on('joinGame', async ({ userId }) => {
 
 
 socket.on('attack', async (data) => {
-    const playerId = socket.playerId;
+    const playerId = data.playerId;
+    const gameId = data.gameId;
+    const targetId = data.targetId;
     console.log(`Player ID from socket: ${playerId}`);
 
     if (!playerId) {
         return socket.emit('error', 'Player ID is not set.');
     }
 
-    const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id);
-    console.log(`Game ID from socket rooms: ${gameId}`); // Debugging log
+    // const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id);
+    // console.log(`Game ID from socket rooms: ${gameId}`); // Debugging log
 
-    if (!gameId) {
-        return socket.emit('error', 'Game ID not found.');
-    }
+    // if (!gameId) {
+    //     return socket.emit('error', 'Game ID not found.');
+    // }
 
-    const targetId = data.targetId; // Get targetId from the incoming data
+    // const targetId = data.targetId; // Get targetId from the incoming data
     console.log(`Player ${playerId} is attacking target ${targetId} in game ${gameId}`); // Debugging log
     const result = await GameController.playerAttack(gameId, playerId, targetId);
 
     if (result.error) {
         socket.emit('error', result.error);
     } else {
-        io.to(gameId).emit('playerAttacked', result);
+        io.to(gameId).emit('playerAttacked', result.game);
     }
 });
 

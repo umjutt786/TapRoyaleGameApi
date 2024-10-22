@@ -288,7 +288,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
         checkForWinner(gameId);
     }
 
-    return { attackerId, opponentId: opponent.id, opponentHealth: game.health[opponent.id] };
+    return { attackerId, opponentId: opponent.id, opponentHealth: game.health[opponent.id],game:game };
 };
 
 
