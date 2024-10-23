@@ -10,7 +10,7 @@ let games = {};
 let botCounter = -1;
 const MAX_PLAYERS = 30;
 const INITIAL_HEALTH = 100;
-const BOT_JOIN_DELAY = 3000;
+const BOT_JOIN_DELAY = 10000;
 const BOT_ATTACK_MIN_DELAY = 2000;
 const BOT_ATTACK_MAX_DELAY = 5000;
 
@@ -87,7 +87,6 @@ const botAttack = async (gameId, botId, opponentId) => {
     const game = games[gameId];
     if (!game || !game.health[botId]) return;
     const opponentLoadout = await getLoadoutForPlayer(opponentId, gameId); // Fetch loadout for the player
-    console.log("LoadOut:" + opponentLoadout);
     let damageDealt = 20;
     if(opponentLoadout){
         if (opponentLoadout.prevents_damage) {
@@ -178,8 +177,9 @@ const joinGame = async (userId) => {
 const startGame = (gameId) => {
     const io = socketManager.getIo(); // Get the io instance
     const game = games[gameId];
+    console.log("room id" + gameId);
     console.log(`Game ${gameId} started with players:`, game.players);
-    io.to(gameId).emit('gameStarted', {
+    io.to(`${gameId}`).emit('gameStarted', {
         message: `Game ${gameId} has started!`,
         game: game,
     });

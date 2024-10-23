@@ -49,10 +49,12 @@ socket.on('joinGame', async ({ userId }) => {
     } else {
         socket.playerId = player.id; // Store the playerId in the socket session
         console.log(`Player ${player.id} joined game ${player.gameId}`); // Debug log to confirm player joined
-        socket.join(player.gameId); // Join socket room for the game
+        console.log(typeof `ROOM ID + ${player.gameId}`);
+        socket.join(`${player.gameId}`); // Join socket room for the game
+        // socket.join(player.gameId); // Join socket room for the game
 
         // Emit to the player who just joined, sending back the gameId
-        socket.emit('gameJoined', { gameId: player.gameId,playerStats:player.playerStats,loadouts:player.loadouts,games:player.games });
+        io.to(player.gameId).emit('gameJoined', { gameId: player.gameId,playerStats:player.playerStats,loadouts:player.loadouts,games:player.games });
     }
 });
 
