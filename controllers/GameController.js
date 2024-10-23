@@ -10,7 +10,7 @@ let games = {};
 let botCounter = -1;
 const MAX_PLAYERS = 30;
 const INITIAL_HEALTH = 100;
-const BOT_JOIN_DELAY = 30000;
+const BOT_JOIN_DELAY = 3000;
 const BOT_ATTACK_MIN_DELAY = 2000;
 const BOT_ATTACK_MAX_DELAY = 5000;
 
@@ -83,6 +83,7 @@ const startBotActions = (gameId) => {
 
 // Function for bot attack
 const botAttack = async (gameId, botId, opponentId) => {
+    const io = socketManager.getIo(); // Get the io instance
     const game = games[gameId];
     if (!game || !game.health[botId]) return;
     const opponentLoadout = await getLoadoutForPlayer(opponentId, gameId); // Fetch loadout for the player

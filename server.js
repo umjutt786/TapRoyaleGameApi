@@ -113,3 +113,13 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+const dataArray = [
+    { id: 1, name: 'Item 1' },
+    { id: 2, name: 'Item 2' },
+    { id: 3, name: 'Item 3' },
+  ]
+  
+app.get('/api', (req, res) => {
+    console.log('API hit at', new Date().toLocaleTimeString())
+    res.json(dataArray)
+  })
