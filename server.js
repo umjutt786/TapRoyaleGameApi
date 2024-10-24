@@ -94,7 +94,7 @@ socket.on('attack', async (data) => {
 
     // When a player disconnects
     socket.on('disconnect', () => {
-        console.log('A player disconnected');
+        console.log('A player disconnected' + socket.playerId);
         const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id);
         if (gameId) {
             io.to(gameId).emit('playerDisconnected', { playerId: socket.playerId });

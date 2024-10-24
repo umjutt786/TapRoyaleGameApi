@@ -87,7 +87,7 @@ const botAttack = async (gameId, botId, opponentId) => {
     const game = games[gameId];
     if (!game || !game.health[botId]) return;
     const opponentLoadout = await getLoadoutForPlayer(opponentId, gameId); // Fetch loadout for the player
-    let damageDealt = 20;
+    let damageDealt = 5;
     if(opponentLoadout){
         if (opponentLoadout.prevents_damage) {
             console.log(`Opponent ${opponentId} has a Shield Loadout. Bot does not deal damage.`);
@@ -122,7 +122,8 @@ const botAttack = async (gameId, botId, opponentId) => {
         );
         checkForWinner(gameId);
     }
-    io.to(gameId).emit('playerAttacked', {
+    console.log(`Bot ${botId} attacked ${opponentId}`);
+    io.to(`${gameId}`).emit('playerAttacked', {
         game: game,
     });
 };
@@ -164,7 +165,7 @@ const joinGame = async (userId) => {
     const loadouts = await Loadout.findAll();
     games[currentGameId].stats[userId] = { kills: 0, damage_dealt: 0 };
     games[currentGameId].health[userId] = INITIAL_HEALTH;
-    games[currentGameId].players.push({ id: userId });
+    games[currentGameId].players.unshift({ id: userId });
 
     console.log(`Player ${userId} joined game ${currentGameId}`);
     
@@ -248,7 +249,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
     }
 
     // Loadout Effects
-    let damageDealt = 20; // Base damage
+    let damageDealt = 5; // Base damage
     if (attackerLoadout) {
         // Check if the attacker has a shield loadout
         if (attackerLoadout.prevents_damage) {
