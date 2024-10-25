@@ -54,7 +54,7 @@ socket.on('joinGame', async ({ userId }) => {
         // socket.join(player.gameId); // Join socket room for the game
 
         // Emit to the player who just joined, sending back the gameId
-        io.to(player.gameId).emit('gameJoined', { gameId: player.gameId,playerStats:player.playerStats,loadouts:player.loadouts,games:player.games });
+        io.to(`${player.gameId}`).emit('gameJoined', { gameId: player.gameId,playerStats:player.playerStats,loadouts:player.loadouts,games:player.games });
     }
 });
 

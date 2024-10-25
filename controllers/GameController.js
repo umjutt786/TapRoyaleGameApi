@@ -163,7 +163,7 @@ const joinGame = async (userId) => {
         is_winner: false
     });
     const loadouts = await Loadout.findAll();
-    games[currentGameId].stats[userId] = { kills: 0, damage_dealt: 0 };
+    games[currentGameId].stats[userId] = { kills: 0, assits:0, death:0, rank:1, damage_dealt: 0, health: INITIAL_HEALTH };
     games[currentGameId].health[userId] = INITIAL_HEALTH;
     games[currentGameId].players.unshift({ id: userId });
 
