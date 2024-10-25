@@ -10,9 +10,9 @@ let games = {};
 let botCounter = -1;
 const MAX_PLAYERS = 30;
 const INITIAL_HEALTH = 100;
-const BOT_JOIN_DELAY = 10000;
-const BOT_ATTACK_MIN_DELAY = 2000;
-const BOT_ATTACK_MAX_DELAY = 5000;
+const BOT_JOIN_DELAY = 30000;
+const BOT_ATTACK_MIN_DELAY = 3000;
+const BOT_ATTACK_MAX_DELAY = 10000;
 
 // Function to create a new game
 const createGame = async () => {
@@ -87,7 +87,7 @@ const botAttack = async (gameId, botId, opponentId) => {
     const game = games[gameId];
     if (!game || !game.health[botId]) return;
     const opponentLoadout = await getLoadoutForPlayer(opponentId, gameId); // Fetch loadout for the player
-    let damageDealt = 5;
+    let damageDealt = 20;
     if(opponentLoadout){
         if (opponentLoadout.prevents_damage) {
             console.log(`Opponent ${opponentId} has a Shield Loadout. Bot does not deal damage.`);
@@ -163,7 +163,7 @@ const joinGame = async (userId) => {
         is_winner: false
     });
     const loadouts = await Loadout.findAll();
-    games[currentGameId].stats[userId] = { kills: 0, assits:0, death:0, rank:1, damage_dealt: 0, health: INITIAL_HEALTH };
+    games[currentGameId].stats[userId] = { kills: 0, assists:0, death:0, rank:1, damage_dealt: 0, health: INITIAL_HEALTH };
     games[currentGameId].health[userId] = INITIAL_HEALTH;
     games[currentGameId].players.unshift({ id: userId });
 
@@ -249,7 +249,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
     }
 
     // Loadout Effects
-    let damageDealt = 5; // Base damage
+    let damageDealt = 20; // Base damage
     if (attackerLoadout) {
         // Check if the attacker has a shield loadout
         if (attackerLoadout.prevents_damage) {
@@ -285,6 +285,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
     // Check for elimination
     if (game.health[opponent.id] <= 0) {
         game.stats[attackerId].kills += 1;
+        console.log("player kills" + attackerId + game.stats[attackerId].kills);
         console.log(`Player ${attackerId} eliminated ${opponent.id}`);
         await MatchStat.increment(
             { kills: 1 },
@@ -322,7 +323,7 @@ const checkForWinner = async (gameId) => {
 const endGame = async (gameId, winnerId) => {
     console.log(`Ending game ${gameId}. Winner: ${winnerId}`);
     const gameStats = games[gameId];
-    delete games[gameId];
+    const io = socketManager.getIo();
 
     // Update match stats for the winner
     if (winnerId) {
@@ -331,7 +332,9 @@ const endGame = async (gameId, winnerId) => {
             { where: { player_id: winnerId, game_id: gameId } }
         );
     }
-
+    io.to(`${gameId}`).emit('endGame', {
+        game: games[gameId],
+    });
     // Clean up game data
     delete games[gameId];
 };
