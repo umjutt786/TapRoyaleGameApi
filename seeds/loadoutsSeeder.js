@@ -25,6 +25,13 @@ exports.seed = async function(knex) {
           prevents_damage: false, // Not applicable
           thief_effect: false, // Not applicable
           money_multiplier: 2.0, // Doubles the money earned per damage
+      },
+      {
+          name: 'Double Attack',
+          type: 'Special',
+          prevents_damage: false, // Not applicable
+          thief_effect: false, // Not applicable
+          money_multiplier: 2.0, // Doubles the money earned per damage
       }
   ]);
 };
