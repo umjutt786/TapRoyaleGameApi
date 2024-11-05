@@ -121,6 +121,8 @@ const botAttack = async (gameId, botId, opponentId) => {
     { where: { player_id: botId, game_id: gameId } },
   )
 
+  updateRanks(gameId)
+
   game.stats[opponentId].damageReceived =
     game.stats[opponentId].damageReceived || {}
   game.stats[opponentId].damageReceived[botId] =
@@ -152,7 +154,6 @@ const botAttack = async (gameId, botId, opponentId) => {
     )
     checkForWinner(gameId)
   }
-  updateRanks(gameId)
   console.log(`Bot ${botId} attacked ${opponentId}`)
   io.to(`${gameId}`).emit('playerAttacked', {
     game: game,
@@ -346,6 +347,8 @@ const playerAttack = async (gameId, attackerId, targetId) => {
     { where: { player_id: attackerId, game_id: gameId } },
   )
 
+  updateRanks(gameId)
+
   game.stats[targetId].damageReceived =
     game.stats[targetId].damageReceived || {}
 
@@ -380,8 +383,6 @@ const playerAttack = async (gameId, attackerId, targetId) => {
     checkForWinner(gameId)
   }
 
-  updateRanks(gameId)
-
   return {
     attackerId,
     opponentId: opponent.id,
@@ -413,14 +414,18 @@ const updateRanks = (gameId) => {
     game.stats[playerId].rank = index + 1 // Update rank for active players
   })
 
-  // Keep rank for eliminated players unchanged
-  players.forEach((playerId) => {
-    if (game.health[playerId] === 0 && !game.stats[playerId].rank) {
-      // Set rank for eliminated players only once when they are eliminated
-      game.stats[playerId].rank = sortedPlayers.length + 1 // Rank them after all active players
-    }
-  })
+  // Assign ranks to eliminated players
+  players
+    .filter((playerId) => game.health[playerId] === 0)
+    .forEach((playerId) => {
+      if (game.stats[playerId].death !== 1) {
+        game.stats[playerId].rank = sortedPlayers.length + 1
+        console.log(`Running for eliminated player ${playerId}`)
+      }
+      // game.stats[playerId].rank = sortedPlayers.length + 1 // Update rank for eliminated players
+    })
 }
+
 
 // Function to check for winners
 const checkForWinner = async (gameId) => {
