@@ -123,6 +123,7 @@ const botAttack = async (gameId, botId, opponentId) => {
     { where: { player_id: botId, game_id: gameId } },
   )
 
+  updateRanks(gameId)
   game.stats[opponentId].damageReceived =
     game.stats[opponentId].damageReceived || {}
   game.stats[opponentId].damageReceived[botId] =
@@ -310,7 +311,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
     { damage_dealt: damageDealt },
     { where: { player_id: attackerId, game_id: gameId } },
   )
-
+  updateRanks(gameId)
   game.stats[targetId].damageReceived =
     game.stats[targetId].damageReceived || {}
 
@@ -448,6 +449,45 @@ const getLoadoutForPlayer = async (playerId, gameId) => {
 
     return loadout ? loadout.loadout : null;
 };
+
+
+const updateRanks = (gameId) => {
+  const game = games[gameId];
+
+  // Get all player IDs
+  const players = Object.keys(game.health);
+
+  // Sort players by kill count first, and then by damage dealt in case of a tie
+  const sortedPlayers = players
+    .filter((playerId) => game.health[playerId] > 0) // Only consider active players for ranking
+    .sort((a, b) => {
+      // Primary sort: by kills (descending)
+      const killsDiff = (game.stats[b].kills || 0) - (game.stats[a].kills || 0);
+      if (killsDiff !== 0) return killsDiff;
+
+      // Secondary sort (if kills are the same): by damage dealt (descending)
+      const damageDiff = (game.stats[b].damage_dealt || 0) - (game.stats[a].damage_dealt || 0);
+      return damageDiff;
+    });
+
+  // Assign ranks to non-eliminated players based on the sorted order
+  sortedPlayers.forEach((playerId, index) => {
+    game.stats[playerId].rank = index + 1; // Update rank for active players (1-based index)
+  });
+
+  // Assign ranks to eliminated players (players with 0 health) at the end
+  players
+    .filter((playerId) => game.health[playerId] === 0)
+    .forEach((playerId) => {
+      // If player is eliminated and hasn't been ranked yet, assign them the last rank
+      if (game.stats[playerId].rank === undefined) {
+        game.stats[playerId].rank = sortedPlayers.length + 1;
+      }
+    });
+};
+
+
+
 
 module.exports = {
     createGame,
