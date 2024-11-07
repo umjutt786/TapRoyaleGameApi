@@ -9,10 +9,10 @@ let games = {}
 let botCounter = -1
 const MAX_PLAYERS = 30
 const INITIAL_HEALTH = 100
-const BOT_JOIN_DELAY = 3000
-const BOT_ATTACK_MIN_DELAY = 7000
+const BOT_JOIN_DELAY = 30000
+const BOT_ATTACK_MIN_DELAY = 5000
 const BOT_ATTACK_MAX_DELAY = 10000
-const GAME_DURATION = 60000 //
+const GAME_DURATION = 300000 // 5 minutes
 const RESPAWN_TIME = 5000
 
 const createGame = async () => {
@@ -232,7 +232,9 @@ const startGame = (gameId) => {
   const game = games[gameId]
   console.log(`Game ${gameId} started with players:`, game.players)
   game.startTime = Date.now()
-  game.timer = setTimeout(() => endGame(gameId, null), GAME_DURATION)
+  game.timer = setTimeout(() => {
+    endGame(gameId, null)
+  }, GAME_DURATION)
   //   console.log('can setTimeout be consoled', game.timer)
   //   const stringGame = JSON.stringify(game)
   console.log('emitting game started')
@@ -311,7 +313,9 @@ const playerAttack = async (gameId, attackerId, targetId) => {
     { damage_dealt: damageDealt },
     { where: { player_id: attackerId, game_id: gameId } },
   )
+
   updateRanks(gameId)
+
   game.stats[targetId].damageReceived =
     game.stats[targetId].damageReceived || {}
 
@@ -405,6 +409,21 @@ const endGame = async (gameId, winnerId) => {
     clearTimeout(game.timer)
   }
 
+  const players = game.players
+
+  for (const player of players) {
+    const playerId = player.id
+    const playerStats = game.stats[playerId]
+
+    if (playerStats) {
+      // Update the player's rank in the database
+      await MatchStat.update(
+        { rank: playerStats.rank },
+        { where: { player_id: playerId, game_id: gameId } },
+      )
+    }
+  }
+
   const statsArray = Object.entries(game.stats)
   const maxKillPlayer = statsArray.reduce(
     (maxPlayer, [playerId, stat]) => {
@@ -442,49 +461,50 @@ const endGame = async (gameId, winnerId) => {
 
 // Helper function to get loadout for a player
 const getLoadoutForPlayer = async (playerId, gameId) => {
-    const loadout = await PlayerGameLoadout.findOne({
-        where: { player_id: playerId },
-        include: [{ model: Loadout, as: 'loadout' }]
-    });
+  const loadout = await PlayerGameLoadout.findOne({
+    where: { player_id: playerId },
+    include: [{ model: Loadout, as: 'loadout' }],
+  })
 
-    return loadout ? loadout.loadout : null;
-};
-
+  return loadout ? loadout.loadout : null
+}
 
 const updateRanks = (gameId) => {
-  const game = games[gameId];
+  const game = games[gameId]
 
   // Get all player IDs
-  const players = Object.keys(game.health);
+  // const players = Object.keys(game.health);
+  const players = Object.keys(game.stats)
 
   // Sort players by kill count first, and then by damage dealt in case of a tie
   const sortedPlayers = players
-    .filter((playerId) => game.health[playerId] > 0) // Only consider active players for ranking
+    // .filter((playerId) => game.health[playerId] > 0) // Only consider active players for ranking
     .sort((a, b) => {
       // Primary sort: by kills (descending)
-      const killsDiff = (game.stats[b].kills || 0) - (game.stats[a].kills || 0);
-      if (killsDiff !== 0) return killsDiff;
+      const killsDiff = (game.stats[b].kills || 0) - (game.stats[a].kills || 0)
+      if (killsDiff !== 0) return killsDiff
 
       // Secondary sort (if kills are the same): by damage dealt (descending)
-      const damageDiff = (game.stats[b].damage_dealt || 0) - (game.stats[a].damage_dealt || 0);
-      return damageDiff;
-    });
+      const damageDiff =
+        (game.stats[b].damage_dealt || 0) - (game.stats[a].damage_dealt || 0)
+      return damageDiff
+    })
 
   // Assign ranks to non-eliminated players based on the sorted order
   sortedPlayers.forEach((playerId, index) => {
-    game.stats[playerId].rank = index + 1; // Update rank for active players (1-based index)
-  });
+    game.stats[playerId].rank = index + 1 // Update rank for active players (1-based index)
+  })
 
   // Assign ranks to eliminated players (players with 0 health) at the end
-  players
-    .filter((playerId) => game.health[playerId] === 0)
-    .forEach((playerId) => {
-      // If player is eliminated and hasn't been ranked yet, assign them the last rank
-      if (game.stats[playerId].rank === undefined) {
-        game.stats[playerId].rank = sortedPlayers.length + 1;
-      }
-    });
-};
+  // players
+  //   .filter((playerId) => game.health[playerId] === 0)
+  //   .forEach((playerId) => {
+  //     // If player is eliminated and hasn't been ranked yet, assign them the last rank
+  //     if (game.stats[playerId].rank === undefined) {
+  //       game.stats[playerId].rank = sortedPlayers.length + 1;
+  //     }
+  //   });
+}
 
 
 

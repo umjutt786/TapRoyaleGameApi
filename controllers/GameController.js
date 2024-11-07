@@ -9,10 +9,10 @@ const socketManager = require('../socket'); // Import the socket manager
 let games = {};
 let botCounter = -1;
 const MAX_PLAYERS = 30;
-const INITIAL_HEALTH = 100;
-const BOT_JOIN_DELAY = 3000
+const INITIAL_HEALTH = 100
+const BOT_JOIN_DELAY = 30000
 const BOT_ATTACK_MIN_DELAY = 3000
-const BOT_ATTACK_MAX_DELAY = 7000
+const BOT_ATTACK_MAX_DELAY = 9000
 
 // Function to create a new game
 const createGame = async () => {
@@ -394,6 +394,11 @@ const playerAttack = async (gameId, attackerId, targetId) => {
 const updateRanks = (gameId) => {
   const game = games[gameId]
 
+  if (!game) {
+    console.log(`Game not found: Game ID: ${gameId}. So no rank updates.`)
+    return
+  }
+
   // Get all player IDs
   const players = Object.keys(game.health)
 
@@ -420,12 +425,9 @@ const updateRanks = (gameId) => {
     .forEach((playerId) => {
       if (game.stats[playerId].death !== 1) {
         game.stats[playerId].rank = sortedPlayers.length + 1
-        console.log(`Running for eliminated player ${playerId}`)
       }
-      // game.stats[playerId].rank = sortedPlayers.length + 1 // Update rank for eliminated players
     })
 }
-
 
 // Function to check for winners
 const checkForWinner = async (gameId) => {
@@ -449,6 +451,31 @@ const endGame = async (gameId, winnerId) => {
   console.log(`Ending game ${gameId}. Winner: ${winnerId}`)
   const game = games[gameId]
   const io = socketManager.getIo()
+
+  // TODO: Delete below code
+  // // convert game object to array
+  // const statsArray = Object.entries(game.stats)
+  // // Sort the array based on rank (ascending)
+  // const sortedStatsArray = statsArray.sort((a, b) => a[1].rank - b[1].rank)
+  // // Convert the sorted array back into an object (if needed)
+  // const sortedStatsObject = Object.fromEntries(sortedStatsArray)
+  // game.stats = sortedStatsObject
+  // console.log(`Game ${gameId} stats:`, game.stats)
+
+  const players = game.players
+
+  for (const player of players) {
+    const playerId = player.id
+    const playerStats = game.stats[playerId]
+
+    if (playerStats) {
+      // Update the player's rank in the database
+      await MatchStat.update(
+        { rank: playerStats.rank },
+        { where: { player_id: playerId, game_id: gameId } },
+      )
+    }
+  }
 
   // Update match stats for the winner
   if (winnerId) {
