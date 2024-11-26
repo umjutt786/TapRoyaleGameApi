@@ -40,7 +40,6 @@ socketManager.setIo(io) // Set the io instance
 
 // Socket connection logic
 io.on('connection', (socket) => {
-  console.log('A player connected')
   socket.on('joinBR', async ({ userId }) => {
     const player = await GameController.joinGame(userId)
 
@@ -48,10 +47,10 @@ io.on('connection', (socket) => {
       socket.emit('error', player.error) // Notify player if there was an error
     } else {
       socket.playerId = player.id // Store the playerId in the socket session
-      console.log(`Player ${player.id} joined game ${player.gameId}`) // Debug log to confirm player joined
-      console.log(typeof `ROOM ID + ${player.gameId}`)
+      console.log(
+        `Player ${player.id} joined game with room ID: ${player.gameId}`,
+      ) // Debug log to confirm player joined
       socket.join(`${player.gameId}`) // Join socket room for the game
-      // socket.join(player.gameId); // Join socket room for the game
 
       // Emit to the player who just joined, sending back the gameId
       io.to(`${player.gameId}`).emit('gameJoined', {
@@ -69,10 +68,10 @@ io.on('connection', (socket) => {
       socket.emit('error', player.error) // Notify player if there was an error
     } else {
       socket.playerId = player.id // Store the playerId in the socket session
-      console.log(`Player ${player.id} joined game ${player.gameId}`) // Debug log to confirm player joined
-      console.log(`ROOM ID + ${player.gameId}`)
+      console.log(
+        `Player ${player.id} joined game with room ID: ${player.gameId}`,
+      ) // Debug log to confirm player joined
       socket.join(`${player.gameId}`) // Join socket room for the game
-      // socket.join(player.gameId); // Join socket room for the game
 
       // Emit to the player who just joined, sending back the gameId
       io.to(`${player.gameId}`).emit('gameJoined', {
@@ -88,23 +87,14 @@ io.on('connection', (socket) => {
     const playerId = data.playerId
     const gameId = data.gameId
     const targetId = data.targetId
-    console.log(`Player ID from socket: ${playerId}`)
 
     if (!playerId) {
       return socket.emit('error', 'Player ID is not set.')
     }
 
-    // const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id);
-    // console.log(`Game ID from socket rooms: ${gameId}`); // Debugging log
-
-    // if (!gameId) {
-    //     return socket.emit('error', 'Game ID not found.');
-    // }
-
-    // const targetId = data.targetId; // Get targetId from the incoming data
-    console.log(
-      `Player ${playerId} is attacking target ${targetId} in game ${gameId}`,
-    ) // Debugging log
+    // console.log(
+    //   `Player ${playerId} is attacking target ${targetId} in game ${gameId}`,
+    // ) // Debugging log
     const result = await GameController.playerAttack(gameId, playerId, targetId)
 
     if (result.error) {
@@ -120,23 +110,14 @@ io.on('connection', (socket) => {
     const playerId = data.playerId
     const gameId = data.gameId
     const targetId = data.targetId
-    console.log(`Player ID from socket: ${playerId}`)
 
     if (!playerId) {
       return socket.emit('error', 'Player ID is not set.')
     }
 
-    // const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id);
-    // console.log(`Game ID from socket rooms: ${gameId}`); // Debugging log
-
-    // if (!gameId) {
-    //     return socket.emit('error', 'Game ID not found.');
-    // }
-
-    // const targetId = data.targetId; // Get targetId from the incoming data
-    console.log(
-      `Player ${playerId} is attacking target ${targetId} in game ${gameId}`,
-    ) // Debugging log
+    // console.log(
+    //   `Player ${playerId} is attacking target ${targetId} in game ${gameId}`,
+    // ) // Debugging log
     const result = await deathMatchController.playerAttack(
       gameId,
       playerId,
@@ -154,7 +135,7 @@ io.on('connection', (socket) => {
 
   // When a player disconnects
   socket.on('disconnect', () => {
-    console.log('A player disconnected' + socket.playerId)
+    // console.log('A player disconnected' + socket.playerId)
     const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id)
     if (gameId) {
       io.to(gameId).emit('playerDisconnected', { playerId: socket.playerId })
@@ -163,25 +144,25 @@ io.on('connection', (socket) => {
 })
 
 // Database connection and server initialization
-sequelize.sync()
-    .then(() => {
-        console.log('Database synced successfully.');
-    })
-    .catch(err => {
-        console.error('Error syncing database:', err);
-    });
+sequelize
+  .sync()
+  .then(() => {
+    console.log('Database synced successfully.')
+  })
+  .catch((err) => {
+    console.error('Error syncing database:', err)
+  })
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000
 server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-const dataArray = [
+  console.log(`Server running on port ${PORT}`)
+})
+
+app.get('/api', (req, res) => {
+  console.log('API hit at', new Date().toLocaleTimeString())
+  res.json([
     { id: 1, name: 'Item 1' },
     { id: 2, name: 'Item 2' },
     { id: 3, name: 'Item 3' },
-  ]
-  
-app.get('/api', (req, res) => {
-    console.log('API hit at', new Date().toLocaleTimeString())
-    res.json(dataArray)
-  })
+  ])
+})

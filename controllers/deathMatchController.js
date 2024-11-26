@@ -10,7 +10,7 @@ let botCounter = -1
 const MAX_PLAYERS = 30
 const INITIAL_HEALTH = 100
 const BOT_JOIN_DELAY = 30000
-const BOT_ATTACK_MIN_DELAY = 5000
+const BOT_ATTACK_MIN_DELAY = 1000
 const BOT_ATTACK_MAX_DELAY = 10000
 const GAME_DURATION = 300000 // 5 minutes
 const RESPAWN_TIME = 5000
@@ -30,7 +30,7 @@ const createGame = async () => {
   // Set a timeout to add bots if no other player joins within the delay
   setTimeout(async () => {
     if (games[gameId].players.length < MAX_PLAYERS) {
-      console.log('Adding bots to the game...')
+      // console.log('Adding bots to the game...')
       await addBotsToGame(gameId)
       startGame(gameId)
     }
@@ -58,7 +58,7 @@ const addBotsToGame = async (gameId) => {
     games[gameId].stats[botId] = { kills: 0, damage_dealt: 0 }
     games[gameId].players.push({ id: botId, isBot: true })
 
-    console.log(`Bot ${botId} joined game ${gameId}`)
+    // console.log(`Bot ${botId} joined game ${gameId}`)
   }
 
   startBotActions(gameId)
@@ -144,7 +144,7 @@ const botAttack = async (gameId, botId, opponentId) => {
 
     game.stats[botId].kills += 1
     game.stats[opponentId].death += 1
-    console.log(`Bot ${botId} eliminated ${opponentId}`)
+    // console.log(`Bot ${botId} eliminated ${opponentId}`)
     await MatchStat.increment(
       { kills: 1 },
       { where: { player_id: botId, game_id: gameId } },
@@ -230,14 +230,12 @@ const joinGame = async (userId, gameId) => {
 const startGame = (gameId) => {
   const io = socketManager.getIo()
   const game = games[gameId]
-  console.log(`Game ${gameId} started with players:`, game.players)
+  // console.log(`Game ${gameId} started with players:`, game.players)
   game.startTime = Date.now()
   game.timer = setTimeout(() => {
     endGame(gameId, null)
   }, GAME_DURATION)
-  //   console.log('can setTimeout be consoled', game.timer)
-  //   const stringGame = JSON.stringify(game)
-  console.log('emitting game started')
+  // console.log('emitting game started')
   io.to(`${gameId}`).emit('gameStarted', {
     message: `Game ${gameId} has started!`,
     game: { players: game.players, health: game.health, stats: game.stats },
@@ -249,12 +247,11 @@ const playerAttack = async (gameId, attackerId, targetId) => {
 
   // Fetch the attacker's loadout from the database using both playerId and gameId
   const attackerLoadout = await getLoadoutForPlayer(targetId, gameId) // Pass gameId here
-  console.log('Request : ' + attackerId)
 
   if (!game || !game.health[attackerId]) {
-    console.log(
-      `Game or player not found: Game ID: ${gameId}, Attacker ID: ${attackerId}`,
-    )
+    // console.log(
+    //   `Game or player not found: Game ID: ${gameId}, Attacker ID: ${attackerId}`,
+    // )
     return { error: 'Game or player not found' }
   }
 
@@ -264,9 +261,9 @@ const playerAttack = async (gameId, attackerId, targetId) => {
   )
 
   if (!opponent) {
-    console.log(
-      `No opponent found for Target ID: ${targetId} in Game ID: ${gameId}`,
-    )
+    // console.log(
+    //   `No opponent found for Target ID: ${targetId} in Game ID: ${gameId}`,
+    // )
     return { error: 'No opponent found' }
   }
 
@@ -303,11 +300,11 @@ const playerAttack = async (gameId, attackerId, targetId) => {
   game.health[opponent.id] -= damageDealt
   game.stats[attackerId].damage_dealt += damageDealt
 
-  console.log(
-    `Player ${attackerId} attacked ${opponent.id}. Opponent health: ${
-      game.health[opponent.id]
-    }`,
-  )
+  // console.log(
+  //   `Player ${attackerId} attacked ${opponent.id}. Opponent health: ${
+  //     game.health[opponent.id]
+  //   }`,
+  // )
 
   await MatchStat.increment(
     { damage_dealt: damageDealt },
@@ -338,8 +335,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
 
     game.stats[attackerId].kills += 1
     game.stats[targetId].death += 1
-    console.log('player kills' + attackerId + game.stats[attackerId].kills)
-    console.log(`Player ${attackerId} eliminated ${opponent.id}`)
+    // console.log(`Player ${attackerId} eliminated ${opponent.id}`)
     await MatchStat.increment(
       { kills: 1 },
       { where: { player_id: attackerId, game_id: gameId } },
@@ -367,9 +363,9 @@ const respawnPlayer = async (gameId, playerId) => {
     game.stats[playerId].damageReceived = {} // Reset damage received
     // game.stats[playerId] = {}; // Reset stats
 
-    console.log(
-      `Player ${playerId} respawned in game ${gameId} with ${INITIAL_HEALTH} health`,
-    )
+    // console.log(
+    //   `Player ${playerId} respawned in game ${gameId} with ${INITIAL_HEALTH} health`,
+    // )
     await MatchStat.update(
       { damage_dealt: 0 }, // Reset damage dealt for this respawn
       { where: { player_id: playerId, game_id: gameId } },
@@ -388,9 +384,9 @@ const checkForWinner = async (gameId, eliminatedPlayerId) => {
   if (playersRemaining.length === -1) {
     //  I changed it to -1 to make it never run, please replace it with appropriate logic
     const winner = playersRemaining[0]
-    console.log(
-      `Player ${winner.id} wins game ${gameId} as the last player remaining.`,
-    )
+    // console.log(
+    //   `Player ${winner.id} wins game ${gameId} as the last player remaining.`,
+    // )
     await MatchStat.update(
       { is_winner: true },
       { where: { player_id: winner.id, game_id: gameId } },
@@ -427,9 +423,9 @@ const endGame = async (gameId, winnerId) => {
   const statsArray = Object.entries(game.stats)
   const maxKillPlayer = statsArray.reduce(
     (maxPlayer, [playerId, stat]) => {
-      console.log(
-        `Comparing ${playerId} with ${stat.kills} to ${maxPlayer.id} with ${maxPlayer.kills}`,
-      )
+      // console.log(
+      //   `Comparing ${playerId} with ${stat.kills} to ${maxPlayer.id} with ${maxPlayer.kills}`,
+      // )
       return stat.kills > maxPlayer.kills
         ? { id: playerId, kills: stat.kills }
         : maxPlayer
@@ -437,13 +433,13 @@ const endGame = async (gameId, winnerId) => {
     { id: null, kills: 0 },
   ) // Changed initial kills to 0
 
-  console.log('Max Kill Player:', maxKillPlayer)
+  // console.log('Max Kill Player:', maxKillPlayer)
 
   // If there's a winner based on kills, update is_winner
   if (maxKillPlayer.id) {
-    console.log(
-      `Player ${maxKillPlayer.id} wins game ${gameId} with ${maxKillPlayer.kills} kills.`,
-    )
+    // console.log(
+    //   `Player ${maxKillPlayer.id} wins game ${gameId} with ${maxKillPlayer.kills} kills.`,
+    // )
     await MatchStat.update(
       { is_winner: true },
       { where: { player_id: maxKillPlayer.id, game_id: gameId } },
@@ -455,7 +451,7 @@ const endGame = async (gameId, winnerId) => {
     game: games[gameId],
   })
 
-  console.log(`Game ${gameId} ended. Winner: ${maxKillPlayer.id}`)
+  // console.log(`Game ${gameId} ended. Winner: ${maxKillPlayer.id}`)
   delete games[gameId] // Clean up the game
 }
 
@@ -473,37 +469,24 @@ const updateRanks = (gameId) => {
   const game = games[gameId]
 
   // Get all player IDs
-  // const players = Object.keys(game.health);
   const players = Object.keys(game.stats)
 
   // Sort players by kill count first, and then by damage dealt in case of a tie
-  const sortedPlayers = players
-    // .filter((playerId) => game.health[playerId] > 0) // Only consider active players for ranking
-    .sort((a, b) => {
-      // Primary sort: by kills (descending)
-      const killsDiff = (game.stats[b].kills || 0) - (game.stats[a].kills || 0)
-      if (killsDiff !== 0) return killsDiff
+  const sortedPlayers = players.sort((a, b) => {
+    // Primary sort: by kills (descending)
+    const killsDiff = (game.stats[b].kills || 0) - (game.stats[a].kills || 0)
+    if (killsDiff !== 0) return killsDiff
 
-      // Secondary sort (if kills are the same): by damage dealt (descending)
-      const damageDiff =
-        (game.stats[b].damage_dealt || 0) - (game.stats[a].damage_dealt || 0)
-      return damageDiff
-    })
+    // Secondary sort (if kills are the same): by damage dealt (descending)
+    const damageDiff =
+      (game.stats[b].damage_dealt || 0) - (game.stats[a].damage_dealt || 0)
+    return damageDiff
+  })
 
   // Assign ranks to non-eliminated players based on the sorted order
   sortedPlayers.forEach((playerId, index) => {
     game.stats[playerId].rank = index + 1 // Update rank for active players (1-based index)
   })
-
-  // Assign ranks to eliminated players (players with 0 health) at the end
-  // players
-  //   .filter((playerId) => game.health[playerId] === 0)
-  //   .forEach((playerId) => {
-  //     // If player is eliminated and hasn't been ranked yet, assign them the last rank
-  //     if (game.stats[playerId].rank === undefined) {
-  //       game.stats[playerId].rank = sortedPlayers.length + 1;
-  //     }
-  //   });
 }
 
 
