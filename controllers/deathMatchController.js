@@ -4,12 +4,13 @@ const Player = require('../models/User');
 const PlayerGameLoadout = require('../models/PlayerGameLoadout');
 const Loadout = require('../models/Loadout');
 const socketManager = require('../socket')
+const User = require('../models/User')
 
 let games = {}
 let botCounter = -1
 const MAX_PLAYERS = 30
-const INITIAL_HEALTH = 100
-const BOT_JOIN_DELAY = 30000
+const INITIAL_HEALTH = 50
+const BOT_JOIN_DELAY = 15000
 const BOT_ATTACK_MIN_DELAY = 1000
 const BOT_ATTACK_MAX_DELAY = 10000
 const GAME_DURATION = 300000 // 5 minutes
@@ -93,7 +94,7 @@ const botAttack = async (gameId, botId, opponentId) => {
 
   const opponentLoadout = await getLoadoutForPlayer(opponentId, gameId) // Fetch loadout for the player
   // console.log("LoadOut:" + opponentLoadout);
-  let damageDealt = 20
+  let damageDealt = 5
 
   if (opponentLoadout) {
     if (opponentLoadout.prevents_damage) {
@@ -268,7 +269,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
   }
 
   // Loadout Effects
-  let damageDealt = 20 // Base damage
+  let damageDealt = 5 // Base damage
   if (attackerLoadout) {
     // Check if the attacker has a shield loadout
     if (attackerLoadout.prevents_damage) {
@@ -417,6 +418,12 @@ const endGame = async (gameId, winnerId) => {
         { rank: playerStats.rank },
         { where: { player_id: playerId, game_id: gameId } },
       )
+      const user = await User.findByPk(playerId)
+      if (user) {
+        user.total_kills += playerStats.kills
+        user.total_extracted_money += playerStats.damage_dealt
+        await user.save()
+      }
     }
   }
 

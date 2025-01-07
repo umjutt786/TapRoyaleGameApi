@@ -42,3 +42,9 @@ exports.login = async (req, res) => {
         res.sendError('Login failed', 401);
     }
 };
+
+exports.fetchUserProfile = async (req, res) => {
+  const userId = req.body.userId
+  const updatedUser = await User.findByPk(userId)
+  res.sendResponse(updatedUser, 'User fetched successfully')
+}
