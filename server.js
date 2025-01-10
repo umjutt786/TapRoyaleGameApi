@@ -35,7 +35,9 @@ app.use('/api/loadouts', loadoutsRoute)
 app.use('/api/games', gameRoutes) // Use game routes
 app.use('/api/games', playerGameLoadoutsRoute) // Use player game loadouts route
 app.use('/api/games', deathMatchRoute) // Use player game loadouts route
-const io = socketIo(server)
+const io = socketIo(server, {
+  maxHttpBufferSize: 4 * 1024 * 1024, // 4 MB buffer size
+})
 socketManager.setIo(io) // Set the io instance
 
 // Socket connection logic
@@ -127,6 +129,11 @@ io.on('connection', (socket) => {
     if (result.error) {
       socket.emit('error', result.error)
     } else {
+      const eventData = JSON.stringify({
+        game: result.game,
+      })
+      const dataSize = new Blob([eventData]).size
+      console.log(`Data sizeeeeeeeeeeeeeeeeeeeee: ${dataSize} bytes`)
       io.to(`${gameId}`).emit('playerAttacked', {
         game: result.game,
       })

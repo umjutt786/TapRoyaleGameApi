@@ -36,17 +36,6 @@ const createGame = async () => {
 
   return gameId
 }
-
-// Function to start the game
-const startGame = (gameId) => {
-  const io = socketManager.getIo() // Get the io instance
-  const game = games[gameId]
-  // console.log(`Game with room id: ${gameId} started with players:`, game.players)
-  io.to(`${gameId}`).emit('gameStarted', {
-    message: `Game ${gameId} has started!`,
-    game: game,
-  })
-}
 const joinGame = async (userId) => {
   let currentGameId = Object.keys(games).find(
     (gameId) => games[gameId].players.length < MAX_PLAYERS,
@@ -134,6 +123,17 @@ const addBotsToGame = async (gameId) => {
   }
 
   startBotActions(gameId)
+}
+
+// Function to start the game
+const startGame = (gameId) => {
+  const io = socketManager.getIo() // Get the io instance
+  const game = games[gameId]
+  // console.log(`Game with room id: ${gameId} started with players:`, game.players)
+  io.to(`${gameId}`).emit('gameStarted', {
+    message: `Game ${gameId} has started!`,
+    game: game,
+  })
 }
 
 // Function to start the bot attack logic

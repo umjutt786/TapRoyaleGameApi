@@ -10,7 +10,7 @@ let games = {}
 let botCounter = -1
 const MAX_PLAYERS = 30
 const INITIAL_HEALTH = 50
-const BOT_JOIN_DELAY = 15000
+const BOT_JOIN_DELAY = 5000
 const BOT_ATTACK_MIN_DELAY = 1000
 const BOT_ATTACK_MAX_DELAY = 10000
 const GAME_DURATION = 300000 // 5 minutes
@@ -157,6 +157,12 @@ const botAttack = async (gameId, botId, opponentId) => {
     checkForWinner(gameId, opponentId)
   }
 
+  // const eventData = JSON.stringify({
+  //   game: { players: game.players, health: game.health, stats: game.stats },
+  // })
+  // const dataSize = new Blob([eventData]).size
+  // console.log(`Data sizeeeeeeeeeeeeeeeeeeeee: ${dataSize} bytes`)
+
   const io = socketManager.getIo()
   io.to(`${gameId}`).emit('playerAttacked', {
     game: { players: game.players, health: game.health, stats: game.stats },
@@ -244,15 +250,23 @@ const startGame = (gameId) => {
 }
 
 const playerAttack = async (gameId, attackerId, targetId) => {
+  let damageDealt = 5 // Base damage
   const game = games[gameId]
 
+  // create an object for damage received
+  game.stats[targetId].damageReceived =
+    game?.stats[targetId]?.damageReceived || {}
+
+  game.stats[targetId].damageReceived[attackerId] =
+    (game?.stats[targetId]?.damageReceived[attackerId] || 0) + damageDealt
+
   // Fetch the attacker's loadout from the database using both playerId and gameId
-  const attackerLoadout = await getLoadoutForPlayer(targetId, gameId) // Pass gameId here
+  const attackerLoadout = await getLoadoutForPlayer(attackerId, gameId) // Pass gameId here
 
   if (!game || !game.health[attackerId]) {
-    // console.log(
-    //   `Game or player not found: Game ID: ${gameId}, Attacker ID: ${attackerId}`,
-    // )
+    console.log(
+      `Game or player not found: Game ID: ${gameId}, Attacker ID: ${attackerId}`,
+    )
     return { error: 'Game or player not found' }
   }
 
@@ -262,17 +276,24 @@ const playerAttack = async (gameId, attackerId, targetId) => {
   )
 
   if (!opponent) {
-    // console.log(
-    //   `No opponent found for Target ID: ${targetId} in Game ID: ${gameId}`,
-    // )
+    console.log(
+      `No opponent found for Target ID: ${targetId} in Game ID: ${gameId}`,
+    )
     return { error: 'No opponent found' }
   }
 
   // Loadout Effects
-  let damageDealt = 5 // Base damage
   if (attackerLoadout) {
+    console.log('the attackerLoadout became true', attackerLoadout)
+    // Check if the attacker has double attack loadout
+    if (attackerLoadout?.dataValues?.id === 1) {
+      damageDealt *= attackerLoadout.dataValues.damage_points // Apply the multiplier
+      console.log(
+        `Player ${attackerId} earns double money. Damage dealt: ${damageDealt}`,
+      )
+    }
     // Check if the attacker has a shield loadout
-    if (attackerLoadout.prevents_damage) {
+    if (attackerLoadout?.dataValues?.id === 2) {
       console.log(
         `Player ${attackerId} has a Shield Loadout. Opponent does not deal damage.`,
       )
@@ -280,20 +301,49 @@ const playerAttack = async (gameId, attackerId, targetId) => {
     }
 
     // Check if the attacker has a Thief Loadout
-    if (attackerLoadout.thief_effect) {
-      console.log(
-        `Player ${attackerId} has a Thief Loadout. Attacker loses money.`,
-      )
-      // Implement logic to deduct money from attacker
-      // For example: deductMoney(attackerId, 2);
+    if (attackerLoadout?.dataValues?.id === 3) {
+      console.log(`this is extra cash loadout`)
+      // Check for elimination
+      console.log(`entering the if statement`, game?.health[opponent?.id])
+      if (game?.health[opponent?.id] <= 5) {
+        console.log(`I have entered the if statement`)
+        const damageReceived = game?.stats[targetId]?.damageReceived
+        Object.keys(damageReceived).forEach(async (playerId) => {
+          if (
+            damageReceived[playerId] >= 30 &&
+            playerId !== String(attackerId)
+          ) {
+            damageDealt *= attackerLoadout.dataValues.damage_points
+            console.log('damageDealti', damageDealt)
+          } else {
+          }
+        })
+        damageDealt *= attackerLoadout.dataValues.damage_points
+        console.log('damageDealt', damageDealt)
+      }
     }
-
-    // Check if the attacker has a Money Multiplier Loadout
-    if (attackerLoadout.money_multiplier > 1.0) {
-      damageDealt *= attackerLoadout.money_multiplier // Apply the multiplier
+    if (attackerLoadout?.dataValues?.id === 4) {
+      damageDealt = attackerLoadout.dataValues.damage_points // Apply the multiplier
       console.log(
-        `Player ${attackerId} earns double money. Damage dealt: ${damageDealt}`,
+        `Player ${attackerId} airstriked ${targetId}. Damage dealt: ${damageDealt}`,
       )
+      const io = socketManager.getIo()
+      io.to(`${gameId}`).emit('useAirStrikeLoadout', {})
+      //delete air strike loadout from database
+      try {
+        await PlayerGameLoadout.destroy({
+          where: {
+            player_id: attackerId,
+            game_id: gameId,
+            loadout_id: 4,
+          },
+        })
+        console.log(
+          `Loadout for player ${attackerId} in game ${gameId} deleted manually.`,
+        )
+      } catch (error) {
+        console.error('Error deleting PlayerGameLoadout after duration:', error)
+      }
     }
   }
 
@@ -301,11 +351,11 @@ const playerAttack = async (gameId, attackerId, targetId) => {
   game.health[opponent.id] -= damageDealt
   game.stats[attackerId].damage_dealt += damageDealt
 
-  // console.log(
-  //   `Player ${attackerId} attacked ${opponent.id}. Opponent health: ${
-  //     game.health[opponent.id]
-  //   }`,
-  // )
+  console.log(
+    `Player ${attackerId} attacked ${opponent.id}. Opponent health: ${
+      game.health[opponent.id]
+    }`,
+  )
 
   await MatchStat.increment(
     { damage_dealt: damageDealt },
@@ -313,12 +363,6 @@ const playerAttack = async (gameId, attackerId, targetId) => {
   )
 
   updateRanks(gameId)
-
-  game.stats[targetId].damageReceived =
-    game.stats[targetId].damageReceived || {}
-
-  game.stats[targetId].damageReceived[attackerId] =
-    (game.stats[targetId].damageReceived[attackerId] || 0) + damageDealt
 
   // Check for elimination
   if (game.health[opponent.id] <= 0) {
@@ -464,12 +508,32 @@ const endGame = async (gameId, winnerId) => {
 
 // Helper function to get loadout for a player
 const getLoadoutForPlayer = async (playerId, gameId) => {
-  const loadout = await PlayerGameLoadout.findOne({
-    where: { player_id: playerId },
-    include: [{ model: Loadout, as: 'loadout' }],
-  })
+  // console.log('I am getLoadoutForPlayer')
+  try {
+    // Query PlayerGameLoadout to find the entry by player_id and game_id
+    const playerGameLoadout = await PlayerGameLoadout.findOne({
+      where: {
+        player_id: playerId,
+        game_id: gameId,
+      },
+      include: {
+        model: Loadout,
+        as: 'loadout', // Use the alias defined in the PlayerGameLoadout model
+      },
+    })
 
-  return loadout ? loadout.loadout : null
+    // Check if entry exists
+    if (!playerGameLoadout) {
+      return { message: 'No loadout found for the specified player and game.' }
+    }
+
+    // Return the loadout information
+    return playerGameLoadout.loadout // Return the associated loadout
+  } catch (error) {
+    onsole.log('I am getLoadoutForPlayer error')
+    console.error('Error fetching loadout:', error)
+    throw error // Handle error as needed
+  }
 }
 
 const updateRanks = (gameId) => {
