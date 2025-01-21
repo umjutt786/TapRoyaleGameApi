@@ -35,7 +35,10 @@ app.use('/api/loadouts', loadoutsRoute)
 app.use('/api/games', gameRoutes) // Use game routes
 app.use('/api/games', playerGameLoadoutsRoute) // Use player game loadouts route
 app.use('/api/games', deathMatchRoute) // Use player game loadouts route
-const io = socketIo(server)
+const io = socketIo(server, {
+  maxHttpBufferSize: 4 * 1024 * 1024, // 4 MB buffer size
+  connectionStateRecovery: {},
+})
 socketManager.setIo(io) // Set the io instance
 
 // Socket connection logic
@@ -135,10 +138,16 @@ io.on('connection', (socket) => {
 
   // When a player disconnects
   socket.on('disconnect', () => {
-    // console.log('A player disconnected' + socket.playerId)
+    if (socket.playerId) {
+      console.log('This player disconnected: ' + socket.playerId)
+    } else {
+      console.log('Some player disconnected')
+    }
     const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id)
     if (gameId) {
-      io.to(gameId).emit('playerDisconnected', { playerId: socket.playerId })
+      io.to(`${gameId}`).emit('playerDisconnected', {
+        playerId: socket.playerId,
+      })
     }
   })
 })

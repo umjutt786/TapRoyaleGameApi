@@ -1,34 +1,33 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database'); // Your database connection
 
-const Loadout = sequelize.define('Loadout', {
+const Loadout = sequelize.define(
+  'Loadout',
+  {
     name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    type: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    prevents_damage: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-    },
-    thief_effect: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-    },
-    money_multiplier: {
-        type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 1.0,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     price: {
-        type: DataTypes.INTEGER,
-        defaultValue: 50,
+      type: DataTypes.INTEGER,
     },
-}, {
+    prevents_damage: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    damage_points: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+    },
+    duration: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+  },
+  {
     timestamps: true,
     underscored: true,
-});
+  },
+)
 
 module.exports = Loadout;

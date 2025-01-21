@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const Country = require('../models/Country');
+const jwt = require('jsonwebtoken')
+const User = require('../models/User')
+const Country = require('../models/Country')
 
 exports.register = async (req, res) => {
   const { username, country_id } = req.body
@@ -27,21 +27,23 @@ exports.register = async (req, res) => {
     console.error('Error during login:', error)
     res.sendError('Error creating user', 500)
   }
-};
+}
 
 exports.login = async (req, res) => {
-    const { username } = req.body;
+  const { username } = req.body
 
-    try {
-        const user = await User.findOne({ where: { username } });
-        if (!user) return res.sendResponse(null, 'Invalid username', 400);;
+  try {
+    const user = await User.findOne({ where: { username } })
+    if (!user) return res.sendResponse(null, 'Invalid username', 400)
 
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.sendResponse({ token: token,user:user  }, 'Login successful');
-    } catch (error) {
-        res.sendError('Login failed', 401);
-    }
-};
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    })
+    res.sendResponse({ token: token, user: user }, 'Login successful')
+  } catch (error) {
+    res.sendError('Login failed', 401)
+  }
+}
 
 exports.fetchUserProfile = async (req, res) => {
   const userId = req.body.userId
