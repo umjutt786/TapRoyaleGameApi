@@ -37,6 +37,7 @@ app.use('/api/games', playerGameLoadoutsRoute) // Use player game loadouts route
 app.use('/api/games', deathMatchRoute) // Use player game loadouts route
 const io = socketIo(server, {
   maxHttpBufferSize: 4 * 1024 * 1024, // 4 MB buffer size
+  connectionStateRecovery: {},
 })
 socketManager.setIo(io) // Set the io instance
 
@@ -129,11 +130,6 @@ io.on('connection', (socket) => {
     if (result.error) {
       socket.emit('error', result.error)
     } else {
-      const eventData = JSON.stringify({
-        game: result.game,
-      })
-      const dataSize = new Blob([eventData]).size
-      console.log(`Data sizeeeeeeeeeeeeeeeeeeeee: ${dataSize} bytes`)
       io.to(`${gameId}`).emit('playerAttacked', {
         game: result.game,
       })
@@ -142,10 +138,16 @@ io.on('connection', (socket) => {
 
   // When a player disconnects
   socket.on('disconnect', () => {
-    // console.log('A player disconnected' + socket.playerId)
+    if (socket.playerId) {
+      console.log('This player disconnected: ' + socket.playerId)
+    } else {
+      console.log('Some player disconnected')
+    }
     const gameId = Object.keys(socket.rooms).find((room) => room !== socket.id)
     if (gameId) {
-      io.to(gameId).emit('playerDisconnected', { playerId: socket.playerId })
+      io.to(`${gameId}`).emit('playerDisconnected', {
+        playerId: socket.playerId,
+      })
     }
   })
 })
