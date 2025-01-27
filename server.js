@@ -44,6 +44,8 @@ socketManager.setIo(io) // Set the io instance
 // Socket connection logic
 io.on('connection', (socket) => {
   socket.on('joinBR', async ({ userId }) => {
+    // socket.on('joinBR', async ({ userId }, callback) => {
+    // callback('joinBR recieved')
     const player = await GameController.joinGame(userId)
 
     if (player.error) {
@@ -57,6 +59,7 @@ io.on('connection', (socket) => {
 
       // Emit to the player who just joined, sending back the gameId
       io.to(`${player.gameId}`).emit('gameJoined', {
+        player: player.user,
         gameId: player.gameId,
         playerStats: player.playerStats,
         loadouts: player.loadouts,
@@ -78,6 +81,7 @@ io.on('connection', (socket) => {
 
       // Emit to the player who just joined, sending back the gameId
       io.to(`${player.gameId}`).emit('gameJoined', {
+        player: player.user,
         gameId: player.gameId,
         playerStats: player.playerStats,
         loadouts: player.loadouts,

@@ -78,7 +78,11 @@ const assignLoadoutToPlayer = async (req, res) => {
       }, duration * 1000) // Convert duration from seconds to milliseconds
     }
 
-    res.status(201).json(playerGameLoadout)
+    res.status(201).json({
+      message: 'Loadout assigned successfully',
+      playerGameLoadout,
+      player,
+    })
   } catch (error) {
     // console.log('I am sending error')
     // console.error('Error assigning loadout:', error)

@@ -95,6 +95,7 @@ const joinGame = async (userId) => {
   // Return the player details along with the current gameId
   return {
     id: userId,
+    user: user,
     gameId: currentGameId,
     playerStats: playerStats,
     loadouts: loadouts,
