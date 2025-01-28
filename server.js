@@ -43,30 +43,29 @@ socketManager.setIo(io) // Set the io instance
 
 // Socket connection logic
 io.on('connection', (socket) => {
-  socket.on('joinBR', async ({ userId }) => {
-    // socket.on('joinBR', async ({ userId }, callback) => {
-    // callback('joinBR recieved')
-    const player = await GameController.joinGame(userId)
+    socket.on('joinBR', async ({ userId }, callback) => {
+      callback('joinBR recieved and working')
+      const player = await GameController.joinGame(userId)
 
-    if (player.error) {
-      socket.emit('error', player.error) // Notify player if there was an error
-    } else {
-      socket.playerId = player.id // Store the playerId in the socket session
-      console.log(
-        `Player ${player.id} joined game with room ID: ${player.gameId}`,
-      ) // Debug log to confirm player joined
-      socket.join(`${player.gameId}`) // Join socket room for the game
+      if (player.error) {
+        socket.emit('error', player.error) // Notify player if there was an error
+      } else {
+        socket.playerId = player.id // Store the playerId in the socket session
+        console.log(
+          `Player ${player.id} joined game with room ID: ${player.gameId}`,
+        ) // Debug log to confirm player joined
+        socket.join(`${player.gameId}`) // Join socket room for the game
 
-      // Emit to the player who just joined, sending back the gameId
-      io.to(`${player.gameId}`).emit('gameJoined', {
-        player: player.user,
-        gameId: player.gameId,
-        playerStats: player.playerStats,
-        loadouts: player.loadouts,
-        games: player.games,
-      })
-    }
-  })
+        // Emit to the player who just joined, sending back the gameId
+        io.to(`${player.gameId}`).emit('gameJoined', {
+          player: player.user,
+          gameId: player.gameId,
+          playerStats: player.playerStats,
+          loadouts: player.loadouts,
+          games: player.games,
+        })
+      }
+    })
   socket.on('joinDM', async ({ userId }) => {
     const player = await deathMatchController.joinGame(userId)
 
