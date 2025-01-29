@@ -1,6 +1,6 @@
 // routes/authRoutes.js
-const express = require('express');
-const router = express.Router();
+const express = require('express')
+const router = express.Router()
 const {
   register,
   login,
@@ -17,4 +17,4 @@ router.post('/login', login)
 // Example protected route
 router.post('/profile', fetchUserProfile)
 
-module.exports = router;
+module.exports = router

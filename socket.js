@@ -1,14 +1,14 @@
-let ioInstance;
+let ioInstance
 
 const setIo = (io) => {
-    ioInstance = io;
-};
+  ioInstance = io
+}
 
 const getIo = () => {
-    return ioInstance;
-};
+  return ioInstance
+}
 
 module.exports = {
-    setIo,
-    getIo
-};
+  setIo,
+  getIo,
+}

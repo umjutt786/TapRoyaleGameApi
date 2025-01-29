@@ -1,5 +1,5 @@
 // knexfile.js
-require('dotenv').config(); // Load environment variables
+require('dotenv').config() // Load environment variables
 
 module.exports = {
   development: {
@@ -8,12 +8,12 @@ module.exports = {
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
+      database: process.env.DB_NAME,
     },
     migrations: {
       tableName: 'knex_migrations',
-      directory: './migrations'
-    }
+      directory: './migrations',
+    },
   },
   production: {
     client: 'mysql',
@@ -21,11 +21,11 @@ module.exports = {
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME
+      database: process.env.DB_NAME,
     },
     migrations: {
       tableName: 'knex_migrations',
-      directory: './migrations'
-    }
-  }
-};
+      directory: './migrations',
+    },
+  },
+}

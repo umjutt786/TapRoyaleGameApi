@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require('sequelize')
+const sequelize = require('../config/database')
 
 const MatchStat = sequelize.define(
   'MatchStat',
@@ -17,6 +17,10 @@ const MatchStat = sequelize.define(
       defaultValue: 0,
     },
     damage_dealt: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0.0,
+    },
+    damage_inflicted: {
       type: DataTypes.FLOAT,
       defaultValue: 0.0,
     },
@@ -52,7 +56,7 @@ const MatchStat = sequelize.define(
   {
     timestamps: true,
     underscored: true,
-  },
+  }
 )
 
-module.exports = MatchStat;
+module.exports = MatchStat

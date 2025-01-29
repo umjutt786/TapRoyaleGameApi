@@ -21,7 +21,7 @@ exports.register = async (req, res) => {
     })
     res.sendResponse(
       { token: token, user: user },
-      'User registered successfully',
+      'User registered successfully'
     )
   } catch (error) {
     console.error('Error during login:', error)

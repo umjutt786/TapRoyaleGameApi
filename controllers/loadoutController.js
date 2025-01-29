@@ -1,8 +1,10 @@
 // controllers/loadoutController.js
-const Loadout = require('../models/Loadout');
-const PlayerGameLoadout = require('../models/PlayerGameLoadout');
+const Loadout = require('../models/Loadout')
+const PlayerGameLoadout = require('../models/PlayerGameLoadout')
 const User = require('../models/User')
 const MatchStat = require('../models/MatchStat')
+const { games: battleRoyaleGame } = require('./GameController')
+const { games: deathMatchGame } = require('./deathMatchController')
 
 // Controller to fetch all available loadouts
 const getAllLoadouts = async (req, res) => {
@@ -17,8 +19,16 @@ const getAllLoadouts = async (req, res) => {
 
 // Controller to assign loadout to player for a game
 const assignLoadoutToPlayer = async (req, res) => {
-  const { playerId, loadoutId, duration } = req.body
+  const { gameMode, playerId, loadoutId, duration } = req.body
   const gameId = req.params.gameId
+  let game
+  if (gameMode === 'BR') {
+    game = battleRoyaleGame[gameId]
+  } else if (gameMode === 'DM') {
+    game = deathMatchGame[gameId]
+  }
+  let usedGameMoney = false
+  let remainingMoney = 0
 
   try {
     // Find the loadout by ID
@@ -31,19 +41,35 @@ const assignLoadoutToPlayer = async (req, res) => {
 
     // Deduct loadout price from player's total_extracted_money
     const player = await User.findByPk(playerId)
+    // check if the player have enough money to buy this loadout
     if (player.total_extracted_money < loadout.price) {
-      return res.sendError(
-        "You don't have enough money to buy this loadout.",
-        402,
-      )
+      // use current game's earning if the player's money is not enough
+      const playerStat = await MatchStat.findOne({
+        where: { player_id: playerId, game_id: gameId },
+      })
+      // check if the player have enough current game's earning to buy this
+      // this loadout
+      if (playerStat.damage_dealt < loadout.price) {
+        return res.sendError(
+          "You don't have enough money to buy this loadout.",
+          402
+        )
+      }
+      playerStat.damage_dealt -= loadout.price
+      game.stats[playerId].damage_dealt = playerStat.damage_dealt
+      usedGameMoney = true
+      await playerStat.save()
+    } else {
+      player.total_extracted_money -= loadout.price
+      remainingMoney = player.total_extracted_money
+      await player.save()
     }
-    player.total_extracted_money -= loadout.price
-    await player.save()
 
+    // Doing same thing above with playerStat.money_spent += loadout.price
     // Increment money_spent of current game in database
     await MatchStat.increment(
       { money_spent: loadout.price },
-      { where: { player_id: playerId, game_id: gameId } },
+      { where: { player_id: playerId, game_id: gameId } }
     )
 
     // Create PlayerGameLoadout entry
@@ -72,7 +98,7 @@ const assignLoadoutToPlayer = async (req, res) => {
         } catch (error) {
           console.error(
             'Error deleting PlayerGameLoadout after duration:',
-            error,
+            error
           )
         }
       }, duration * 1000) // Convert duration from seconds to milliseconds
@@ -81,16 +107,18 @@ const assignLoadoutToPlayer = async (req, res) => {
     res.status(201).json({
       message: 'Loadout assigned successfully',
       playerGameLoadout,
-      player,
+      usedGameMoney,
+      remainingMoney,
+      game: { players: game.players, health: game.health, stats: game.stats },
     })
   } catch (error) {
     // console.log('I am sending error')
-    // console.error('Error assigning loadout:', error)
+    console.error('Error assigning loadout:', error)
     res.status(500).json({ error: 'An error occurred while assigning loadout' })
   }
 }
 
 module.exports = {
-    getAllLoadouts,
-    assignLoadoutToPlayer,
-};
+  getAllLoadouts,
+  assignLoadoutToPlayer,
+}

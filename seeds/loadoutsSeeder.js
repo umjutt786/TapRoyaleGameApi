@@ -1,8 +1,8 @@
 // seeds/loadoutsSeeder.js
-exports.seed = async function(knex) {
+exports.seed = async function (knex) {
   // Deletes ALL existing entries
-  await knex('loadouts').del();
-  
+  await knex('loadouts').del()
+
   // Inserts seed entries
   await knex('loadouts').insert([
     {
@@ -34,4 +34,4 @@ exports.seed = async function(knex) {
       duration: null,
     },
   ])
-};
+}

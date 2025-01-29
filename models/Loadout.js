@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database'); // Your database connection
+const { DataTypes } = require('sequelize')
+const sequelize = require('../config/database') // Your database connection
 
 const Loadout = sequelize.define(
   'Loadout',
@@ -27,7 +27,7 @@ const Loadout = sequelize.define(
   {
     timestamps: true,
     underscored: true,
-  },
+  }
 )
 
-module.exports = Loadout;
+module.exports = Loadout
