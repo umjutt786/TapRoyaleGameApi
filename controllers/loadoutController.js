@@ -1,6 +1,6 @@
 // controllers/loadoutController.js
-const Loadout = require('../models/Loadout');
-const PlayerGameLoadout = require('../models/PlayerGameLoadout');
+const Loadout = require('../models/Loadout')
+const PlayerGameLoadout = require('../models/PlayerGameLoadout')
 const User = require('../models/User')
 const MatchStat = require('../models/MatchStat')
 const { games: battleRoyaleGame } = require('./GameController')
@@ -52,7 +52,7 @@ const assignLoadoutToPlayer = async (req, res) => {
       if (playerStat.damage_dealt < loadout.price) {
         return res.sendError(
           "You don't have enough money to buy this loadout.",
-          402,
+          402
         )
       }
       playerStat.damage_dealt -= loadout.price
@@ -69,7 +69,7 @@ const assignLoadoutToPlayer = async (req, res) => {
     // Increment money_spent of current game in database
     await MatchStat.increment(
       { money_spent: loadout.price },
-      { where: { player_id: playerId, game_id: gameId } },
+      { where: { player_id: playerId, game_id: gameId } }
     )
 
     // Create PlayerGameLoadout entry
@@ -98,7 +98,7 @@ const assignLoadoutToPlayer = async (req, res) => {
         } catch (error) {
           console.error(
             'Error deleting PlayerGameLoadout after duration:',
-            error,
+            error
           )
         }
       }, duration * 1000) // Convert duration from seconds to milliseconds
@@ -119,6 +119,6 @@ const assignLoadoutToPlayer = async (req, res) => {
 }
 
 module.exports = {
-    getAllLoadouts,
-    assignLoadoutToPlayer,
-};
+  getAllLoadouts,
+  assignLoadoutToPlayer,
+}

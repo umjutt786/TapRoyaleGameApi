@@ -1,14 +1,14 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const sequelize = require('./config/database');
-const authRoutes = require('./routes/authRoutes'); // Import auth routes
-const countryRoutes = require('./routes/countryRoutes'); // Import country routes
-const responseFormatter = require('./middlewares/responseFormatter'); // Import response formatter
-const gameRoutes = require('./routes/gameRoutes');
-const loadoutsRoute = require('./routes/loadouts');
-const http = require('http');
-const socketIo = require('socket.io');
-const GameController = require('./controllers/GameController'); // Import GameController for socket use
+const express = require('express')
+const dotenv = require('dotenv')
+const sequelize = require('./config/database')
+const authRoutes = require('./routes/authRoutes') // Import auth routes
+const countryRoutes = require('./routes/countryRoutes') // Import country routes
+const responseFormatter = require('./middlewares/responseFormatter') // Import response formatter
+const gameRoutes = require('./routes/gameRoutes')
+const loadoutsRoute = require('./routes/loadouts')
+const http = require('http')
+const socketIo = require('socket.io')
+const GameController = require('./controllers/GameController') // Import GameController for socket use
 const deathMatchController = require('./controllers/deathMatchController') // Import deathMatchController for socket use
 const deathMatchRoute = require('./routes/deathMatchRoutes') // Import GameController for socket use
 const playerGameLoadoutsRoute = require('./routes/playerGameLoadouts')
@@ -53,7 +53,7 @@ io.on('connection', (socket) => {
     } else {
       socket.playerId = player.id // Store the playerId in the socket session
       console.log(
-        `Player ${player.id} joined game with room ID: ${player.gameId}`,
+        `Player ${player.id} joined game with room ID: ${player.gameId}`
       ) // Debug log to confirm player joined
       socket.join(`${player.gameId}`) // Join socket room for the game
 
@@ -75,7 +75,7 @@ io.on('connection', (socket) => {
     } else {
       socket.playerId = player.id // Store the playerId in the socket session
       console.log(
-        `Player ${player.id} joined game with room ID: ${player.gameId}`,
+        `Player ${player.id} joined game with room ID: ${player.gameId}`
       ) // Debug log to confirm player joined
       socket.join(`${player.gameId}`) // Join socket room for the game
 
@@ -128,7 +128,7 @@ io.on('connection', (socket) => {
     const result = await deathMatchController.playerAttack(
       gameId,
       playerId,
-      targetId,
+      targetId
     )
 
     if (result.error) {

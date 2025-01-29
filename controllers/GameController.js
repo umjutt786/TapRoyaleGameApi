@@ -1,9 +1,9 @@
-const MatchStat = require('../models/MatchStat');
-const Game = require('../models/Game');
-const Player = require('../models/User');
-const PlayerGameLoadout = require('../models/PlayerGameLoadout');
-const Loadout = require('../models/Loadout');
-const socketManager = require('../socket'); // Import the socket manager
+const MatchStat = require('../models/MatchStat')
+const Game = require('../models/Game')
+const Player = require('../models/User')
+const PlayerGameLoadout = require('../models/PlayerGameLoadout')
+const Loadout = require('../models/Loadout')
+const socketManager = require('../socket') // Import the socket manager
 const User = require('../models/User')
 
 let games = {}
@@ -38,7 +38,7 @@ const createGame = async () => {
 }
 const joinGame = async (userId) => {
   let currentGameId = Object.keys(games).find(
-    (gameId) => games[gameId].players.length < MAX_PLAYERS,
+    (gameId) => games[gameId].players.length < MAX_PLAYERS
   )
 
   // If no game is available, create a new game
@@ -153,18 +153,23 @@ const startBotActions = (gameId) => {
 
   game.players.forEach((player) => {
     if (player.isBot) {
-      setInterval(() => {
-        if (game.players.length > 1) {
-          const opponents = game.players.filter(
-            (p) => p.id !== player.id && game.health[p.id] > 0,
-          )
-          if (opponents.length > 0) {
-            const opponent =
-              opponents[Math.floor(Math.random() * opponents.length)]
-            botAttack(gameId, player.id, opponent.id)
+      setInterval(
+        () => {
+          if (game.players.length > 1) {
+            const opponents = game.players.filter(
+              (p) => p.id !== player.id && game.health[p.id] > 0
+            )
+            if (opponents.length > 0) {
+              const opponent =
+                opponents[Math.floor(Math.random() * opponents.length)]
+              botAttack(gameId, player.id, opponent.id)
+            }
           }
-        }
-      }, Math.floor(Math.random() * (BOT_ATTACK_MAX_DELAY - BOT_ATTACK_MIN_DELAY + 1)) + BOT_ATTACK_MIN_DELAY)
+        },
+        Math.floor(
+          Math.random() * (BOT_ATTACK_MAX_DELAY - BOT_ATTACK_MIN_DELAY + 1)
+        ) + BOT_ATTACK_MIN_DELAY
+      )
     }
   })
 }
@@ -204,7 +209,7 @@ const botAttack = async (gameId, botId, opponentId) => {
 
   await MatchStat.increment(
     { damage_dealt: damageDealt, damage_inflicted: damageDealt },
-    { where: { player_id: botId, game_id: gameId } },
+    { where: { player_id: botId, game_id: gameId } }
   )
 
   updateRanks(gameId)
@@ -222,7 +227,7 @@ const botAttack = async (gameId, botId, opponentId) => {
         game.stats[playerId].assists = (game.stats[playerId].assists || 0) + 1
         await MatchStat.increment(
           { assist: 1 },
-          { where: { player_id: playerId, game_id: gameId } },
+          { where: { player_id: playerId, game_id: gameId } }
         )
       }
     })
@@ -232,11 +237,11 @@ const botAttack = async (gameId, botId, opponentId) => {
     // console.log(`Bot ${botId} eliminated ${opponentId} and ${opponentId}`)
     await MatchStat.increment(
       { kills: 1 },
-      { where: { player_id: botId, game_id: gameId } },
+      { where: { player_id: botId, game_id: gameId } }
     )
     await MatchStat.increment(
       { death: 1 },
-      { where: { player_id: opponentId, game_id: gameId } },
+      { where: { player_id: opponentId, game_id: gameId } }
     )
     checkForWinner(gameId)
   }
@@ -272,7 +277,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
 
   // Check if the opponent exists and has health > 0
   const opponent = game.players.find(
-    (player) => player.id === targetId && game.health[player.id] > 0,
+    (player) => player.id === targetId && game.health[player.id] > 0
   )
 
   if (!opponent) {
@@ -356,7 +361,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
 
   await MatchStat.increment(
     { damage_dealt: damageDealt, damage_inflicted: damageDealt },
-    { where: { player_id: attackerId, game_id: gameId } },
+    { where: { player_id: attackerId, game_id: gameId } }
   )
 
   updateRanks(gameId)
@@ -370,7 +375,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
         game.stats[playerId].assists = (game.stats[playerId].assists || 0) + 1
         await MatchStat.increment(
           { assist: 1 },
-          { where: { player_id: playerId, game_id: gameId } },
+          { where: { player_id: playerId, game_id: gameId } }
         )
       }
     })
@@ -380,11 +385,11 @@ const playerAttack = async (gameId, attackerId, targetId) => {
     // console.log(`Player ${attackerId} eliminated ${opponent.id}`)
     await MatchStat.increment(
       { kills: 1 },
-      { where: { player_id: attackerId, game_id: gameId } },
+      { where: { player_id: attackerId, game_id: gameId } }
     )
     await MatchStat.increment(
       { death: 1 },
-      { where: { player_id: targetId, game_id: gameId } },
+      { where: { player_id: targetId, game_id: gameId } }
     )
     checkForWinner(gameId)
   }
@@ -435,7 +440,7 @@ const updateRanks = (gameId) => {
 const checkForWinner = async (gameId) => {
   const game = games[gameId]
   const alivePlayers = game?.players.filter(
-    (player) => game.health[player.id] > 0,
+    (player) => game.health[player.id] > 0
   )
 
   if (alivePlayers.length === 1) {
@@ -473,7 +478,7 @@ const endGame = async (gameId, winnerId) => {
       // Update the player's rank in the database
       await MatchStat.update(
         { rank: playerStats.rank },
-        { where: { player_id: playerId, game_id: gameId } },
+        { where: { player_id: playerId, game_id: gameId } }
       )
       const user = await User.findByPk(playerId)
       if (user) {
@@ -488,7 +493,7 @@ const endGame = async (gameId, winnerId) => {
   if (winnerId) {
     await MatchStat.update(
       { is_winner: true },
-      { where: { player_id: winnerId, game_id: gameId } },
+      { where: { player_id: winnerId, game_id: gameId } }
     )
   }
 

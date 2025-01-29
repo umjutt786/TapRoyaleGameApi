@@ -1,18 +1,22 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require('sequelize')
+const sequelize = require('../config/database')
 
-const Game = sequelize.define('Game', {
+const Game = sequelize.define(
+  'Game',
+  {
     started_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
     },
     ended_at: {
-        type: DataTypes.DATE,
-        allowNull: true,
+      type: DataTypes.DATE,
+      allowNull: true,
     },
-}, {
+  },
+  {
     timestamps: true,
     underscored: true,
-});
+  }
+)
 
-module.exports = Game;
+module.exports = Game

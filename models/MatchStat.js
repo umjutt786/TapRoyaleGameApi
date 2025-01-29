@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require('sequelize')
+const sequelize = require('../config/database')
 
 const MatchStat = sequelize.define(
   'MatchStat',
@@ -56,7 +56,7 @@ const MatchStat = sequelize.define(
   {
     timestamps: true,
     underscored: true,
-  },
+  }
 )
 
-module.exports = MatchStat;
+module.exports = MatchStat
