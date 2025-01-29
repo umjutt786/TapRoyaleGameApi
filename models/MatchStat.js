@@ -20,6 +20,10 @@ const MatchStat = sequelize.define(
       type: DataTypes.FLOAT,
       defaultValue: 0.0,
     },
+    damage_inflicted: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0.0,
+    },
     money_spent: {
       type: DataTypes.FLOAT,
       defaultValue: 0.0,

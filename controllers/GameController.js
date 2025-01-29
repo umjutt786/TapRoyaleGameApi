@@ -74,6 +74,7 @@ const joinGame = async (userId) => {
     game_id: currentGameId,
     kills: 0,
     damage_dealt: 0,
+    damage_inflicted: 0,
     money_spent: 0,
     is_winner: false,
   })
@@ -84,6 +85,7 @@ const joinGame = async (userId) => {
     death: 0,
     rank: 1,
     damage_dealt: 0,
+    damage_inflicted: 0,
     money_spent: 0,
     health: INITIAL_HEALTH,
   }
@@ -114,13 +116,18 @@ const addBotsToGame = async (gameId) => {
       game_id: gameId,
       kills: 0,
       damage_dealt: 0,
+      damage_inflicted: 0,
       money_spent: 0,
       is_winner: false,
       is_bot: true,
     })
 
     games[gameId].health[botId] = INITIAL_HEALTH
-    games[gameId].stats[botId] = { kills: 0, damage_dealt: 0 }
+    games[gameId].stats[botId] = {
+      kills: 0,
+      damage_dealt: 0,
+      damage_inflicted: 0,
+    }
     games[gameId].players.push({ id: botId, isBot: true })
 
     // console.log(`Bot ${botId} joined game ${gameId}`)
@@ -193,9 +200,10 @@ const botAttack = async (gameId, botId, opponentId) => {
 
   game.health[opponentId] -= damageDealt
   game.stats[botId].damage_dealt += damageDealt
+  game.stats[botId].damage_inflicted += damageDealt
 
   await MatchStat.increment(
-    { damage_dealt: damageDealt },
+    { damage_dealt: damageDealt, damage_inflicted: damageDealt },
     { where: { player_id: botId, game_id: gameId } },
   )
 
@@ -338,6 +346,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
   // Execute attack logic
   game.health[opponent.id] -= damageDealt
   game.stats[attackerId].damage_dealt += damageDealt
+  game.stats[attackerId].damage_inflicted += damageDealt
 
   // console.log(
   //   `Player ${attackerId} attacked ${opponent.id}. Opponent health: ${
@@ -346,7 +355,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
   // )
 
   await MatchStat.increment(
-    { damage_dealt: damageDealt },
+    { damage_dealt: damageDealt, damage_inflicted: damageDealt },
     { where: { player_id: attackerId, game_id: gameId } },
   )
 
@@ -519,6 +528,7 @@ const getLoadoutForPlayer = async (playerId, gameId) => {
 }
 
 module.exports = {
+  games,
   createGame,
   joinGame,
   playerAttack,

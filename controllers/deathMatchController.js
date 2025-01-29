@@ -51,13 +51,18 @@ const addBotsToGame = async (gameId) => {
       game_id: gameId,
       kills: 0,
       damage_dealt: 0,
+      damage_inflicted: 0,
       money_spent: 0,
       is_winner: false,
       is_bot: true,
     })
 
     games[gameId].health[botId] = INITIAL_HEALTH
-    games[gameId].stats[botId] = { kills: 0, damage_dealt: 0 }
+    games[gameId].stats[botId] = {
+      kills: 0,
+      damage_dealt: 0,
+      damage_inflicted: 0,
+    }
     games[gameId].players.push({ id: botId, isBot: true })
 
     // console.log(`Bot ${botId} joined game ${gameId}`)
@@ -118,9 +123,10 @@ const botAttack = async (gameId, botId, opponentId) => {
 
   game.health[opponentId] -= damageDealt
   game.stats[botId].damage_dealt += damageDealt
+  game.stats[botId].damage_inflicted += damageDealt
 
   await MatchStat.increment(
-    { damage_dealt: damageDealt },
+    { damage_dealt: damageDealt, damage_inflicted: damageDealt },
     { where: { player_id: botId, game_id: gameId } },
   )
 
@@ -201,6 +207,7 @@ const joinGame = async (userId, gameId) => {
     game_id: currentGameId,
     kills: 0,
     damage_dealt: 0,
+    damage_inflicted: 0,
     money_spent: 0,
     is_winner: false,
   })
@@ -211,6 +218,7 @@ const joinGame = async (userId, gameId) => {
     death: 0,
     rank: 1,
     damage_dealt: 0,
+    damage_inflicted: 0,
     money_spent: 0,
     health: INITIAL_HEALTH,
   }
@@ -344,6 +352,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
   // Execute attack logic
   game.health[opponent.id] -= damageDealt
   game.stats[attackerId].damage_dealt += damageDealt
+  game.stats[attackerId].damage_inflicted += damageDealt
 
   // console.log(
   //   `Player ${attackerId} attacked ${opponent.id}. Opponent health: ${
@@ -352,7 +361,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
   // )
 
   await MatchStat.increment(
-    { damage_dealt: damageDealt },
+    { damage_dealt: damageDealt, damage_inflicted: damageDealt },
     { where: { player_id: attackerId, game_id: gameId } },
   )
 
@@ -405,10 +414,12 @@ const respawnPlayer = async (gameId, playerId) => {
     // console.log(
     //   `Player ${playerId} respawned in game ${gameId} with ${INITIAL_HEALTH} health`,
     // )
-    await MatchStat.update(
-      { damage_dealt: 0 }, // Reset damage dealt for this respawn
-      { where: { player_id: playerId, game_id: gameId } },
-    )
+
+    // no need to set damage_dealt to 0 on respawn
+    // await MatchStat.update(
+    //   { damage_dealt: 0 }, // Reset damage dealt for this respawn
+    //   { where: { player_id: playerId, game_id: gameId } },
+    // )
   }
 }
 
@@ -565,12 +576,10 @@ const updateRanks = (gameId) => {
   })
 }
 
-
-
-
 module.exports = {
-    createGame,
-    joinGame,
-    playerAttack,
-    getLoadoutForPlayer
-};
+  games,
+  createGame,
+  joinGame,
+  playerAttack,
+  getLoadoutForPlayer,
+}
