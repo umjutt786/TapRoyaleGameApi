@@ -12,6 +12,7 @@ const GameController = require('./controllers/GameController') // Import GameCon
 const deathMatchController = require('./controllers/deathMatchController') // Import deathMatchController for socket use
 const deathMatchRoute = require('./routes/deathMatchRoutes') // Import GameController for socket use
 const playerGameLoadoutsRoute = require('./routes/playerGameLoadouts')
+const leaderBoardRoute = require('./routes/leaderBoardRoute')
 const Loadout = require('./models/Loadout')
 const PlayerGameLoadout = require('./models/PlayerGameLoadout')
 const socketManager = require('./socket')
@@ -35,6 +36,8 @@ app.use('/api/loadouts', loadoutsRoute)
 app.use('/api/games', gameRoutes) // Use game routes
 app.use('/api/games', playerGameLoadoutsRoute) // Use player game loadouts route
 app.use('/api/games', deathMatchRoute) // Use player game loadouts route
+app.use('/api/leaderboard', leaderBoardRoute)
+
 const io = socketIo(server, {
   maxHttpBufferSize: 4 * 1024 * 1024, // 4 MB buffer size
   connectionStateRecovery: {},
