@@ -532,6 +532,13 @@ const getLoadoutForPlayer = async (playerId, gameId) => {
   }
 }
 
+const clearPlayerMoney = async (userId, gameId) => {
+  const game = games[gameId]
+  if (game) {
+    game.stats[userId].damage_dealt = 0
+  }
+}
+
 module.exports = {
   games,
   createGame,
@@ -540,4 +547,5 @@ module.exports = {
   startGame,
   endGame,
   getLoadoutForPlayer,
+  clearPlayerMoney,
 }
