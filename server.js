@@ -143,6 +143,14 @@ io.on('connection', (socket) => {
     }
   })
 
+  socket.on('exitGameBR', async (data) => {
+    await GameController.clearPlayerMoney(data.userId, data.gameId)
+  })
+
+  socket.on('exitGameDM', async (data) => {
+    await deathMatchController.clearPlayerMoney(data.userId, data.gameId)
+  })
+
   // When a player disconnects
   socket.on('disconnect', () => {
     if (socket.playerId) {
