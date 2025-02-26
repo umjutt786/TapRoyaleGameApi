@@ -39,33 +39,50 @@ const assignLoadoutToPlayer = async (req, res) => {
       return res.status(404).json({ error: 'Loadout not found' })
     }
 
-    // Deduct loadout price from player's total_extracted_money
-    const player = await User.findByPk(playerId)
-    // check if the player have enough money to buy this loadout
-    if (player.total_extracted_money < loadout.price) {
-      // use current game's earning if the player's money is not enough
-      const playerStat = await MatchStat.findOne({
-        where: { player_id: playerId, game_id: gameId },
-      })
-      // check if the player have enough current game's earning to buy this
-      // this loadout
-      if (playerStat.damage_dealt < loadout.price) {
-        return res.sendError(
-          "You don't have enough money to buy this loadout.",
-          402
-        )
-      }
-      playerStat.damage_dealt -= loadout.price
-      game.stats[playerId].damage_dealt = playerStat.damage_dealt
-      usedGameMoney = true
-      await playerStat.save()
-    } else {
-      player.total_extracted_money -= loadout.price
-      remainingMoney = player.total_extracted_money
-      await player.save()
+    // Deduct loadout price from player's MatchStat.damage_dealt
+    const playerStat = await MatchStat.findOne({
+      where: { player_id: playerId, game_id: gameId },
+    })
+    // check if the player have enough current game's earning to buy this
+    // this loadout
+    if (playerStat.damage_dealt < loadout.price) {
+      return res.sendError(
+        "You don't have enough money to buy this loadout.",
+        402
+      )
     }
+    playerStat.damage_dealt -= loadout.price
+    game.stats[playerId].damage_dealt = playerStat.damage_dealt
+    usedGameMoney = true
+    await playerStat.save()
 
-    // Doing same thing above with playerStat.money_spent += loadout.price
+    // TODO: uncomment below code and remove above code to use player money
+    // // Deduct loadout price from player's total_extracted_money
+    // const player = await User.findByPk(playerId)
+    // // check if the player have enough money to buy this loadout
+    // if (player.total_extracted_money < loadout.price) {
+    //   // use current game's earning if the player's money is not enough
+    //   const playerStat = await MatchStat.findOne({
+    //     where: { player_id: playerId, game_id: gameId },
+    //   })
+    //   // check if the player have enough current game's earning to buy this
+    //   // this loadout
+    //   if (playerStat.damage_dealt < loadout.price) {
+    //     return res.sendError(
+    //       "You don't have enough money to buy this loadout.",
+    //       402
+    //     )
+    //   }
+    //   playerStat.damage_dealt -= loadout.price
+    //   game.stats[playerId].damage_dealt = playerStat.damage_dealt
+    //   usedGameMoney = true
+    //   await playerStat.save()
+    // } else {
+    //   player.total_extracted_money -= loadout.price
+    //   remainingMoney = player.total_extracted_money
+    //   await player.save()
+    // }
+
     // Increment money_spent of current game in database
     await MatchStat.increment(
       { money_spent: loadout.price },
