@@ -179,8 +179,10 @@ const botAttack = async (gameId, botId, opponentId) => {
   const io = socketManager.getIo() // Get the io instance
   const game = games[gameId]
   if (!game || !game.health[botId]) return
-  const opponentLoadout = await getLoadoutForPlayer(opponentId, gameId) // Fetch loadout for the player
   let damageDealt = 5
+
+  // Check Opponent Loadout
+  const opponentLoadout = await getLoadoutForPlayer(opponentId, gameId) // Fetch loadout for the player
   if (opponentLoadout) {
     if (opponentLoadout.prevents_damage) {
       // console.log(
@@ -260,6 +262,30 @@ const playerAttack = async (gameId, attackerId, targetId) => {
     return { error: 'Game not found' }
   }
 
+  // Check Opponent Loadout
+  const opponentLoadout = await getLoadoutForPlayer(targetId, gameId) // Fetch loadout for the player
+  if (opponentLoadout) {
+    if (opponentLoadout.prevents_damage) {
+      // console.log(
+      //   `Opponent ${opponentId} has a Shield Loadout. Bot does not deal damage.`,
+      // )
+      return { error: 'Opponent cannot take damage due to Shield Loadout' }
+    }
+    if (opponentLoadout.thief_effect) {
+      // console.log(
+      //   `Opponent ${opponentId} has a Thief Loadout. Opponent loses money.`,
+      // )
+      // Implement logic to deduct money from the opponent
+      // For example: deductMoney(opponentId, 2);
+    }
+    if (opponentLoadout.money_multiplier > 1.0) {
+      damageDealt *= opponentLoadout.money_multiplier // Apply the multiplier
+      // console.log(
+      //   `Opponent ${opponentId} earns double money. Damage dealt: ${damageDealt}`,
+      // )
+    }
+  }
+
   // create an object for damage received
   game.stats[targetId].damageReceived =
     game?.stats[targetId]?.damageReceived || {}
@@ -287,7 +313,7 @@ const playerAttack = async (gameId, attackerId, targetId) => {
     return { error: 'No opponent found' }
   }
 
-  // Loadout Effects
+  // Check Attacker Loadout
   if (attackerLoadout) {
     // Check if the attacker has double attack loadout
     if (attackerLoadout?.dataValues?.id === 1) {
@@ -301,7 +327,6 @@ const playerAttack = async (gameId, attackerId, targetId) => {
       // console.log(
       //   `Player ${attackerId} has a Shield Loadout. Opponent does not deal damage.`,
       // )
-      return { error: 'Opponent cannot deal damage due to Shield Loadout' }
     }
 
     // Check if the attacker has a Thief Loadout
