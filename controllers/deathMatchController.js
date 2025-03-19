@@ -5,6 +5,10 @@ const PlayerGameLoadout = require('../models/PlayerGameLoadout')
 const Loadout = require('../models/Loadout')
 const socketManager = require('../socket')
 const User = require('../models/User')
+const {
+  getUniqueUsername,
+  deleteUsedUsernamesByGame,
+} = require('../utils/getUniqueUsername')
 
 let games = {}
 let botCounter = -1
@@ -46,6 +50,8 @@ const addBotsToGame = async (gameId) => {
     botCounter--
     const botId = botCounter
 
+    const username = getUniqueUsername(gameId)
+
     await MatchStat.create({
       player_id: botId,
       game_id: gameId,
@@ -59,6 +65,7 @@ const addBotsToGame = async (gameId) => {
 
     games[gameId].health[botId] = INITIAL_HEALTH
     games[gameId].stats[botId] = {
+      username: username,
       kills: 0,
       damage_dealt: 0,
       damage_inflicted: 0,
@@ -219,6 +226,7 @@ const joinGame = async (userId, gameId) => {
   })
   const loadouts = await Loadout.findAll()
   games[currentGameId].stats[userId] = {
+    username: user.username,
     kills: 0,
     assists: 0,
     death: 0,
@@ -482,6 +490,8 @@ const endGame = async (gameId, winnerId) => {
   if (game.timer) {
     clearTimeout(game.timer)
   }
+
+  deleteUsedUsernamesByGame(gameId)
 
   const players = game.players
 
