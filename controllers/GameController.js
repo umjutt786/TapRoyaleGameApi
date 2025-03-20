@@ -562,7 +562,7 @@ const getLoadoutForPlayer = async (playerId, gameId) => {
     // Return the loadout information
     return playerGameLoadout.loadout // Return the associated loadout
   } catch (error) {
-    onsole.log('I am getLoadoutForPlayer error')
+    console.log('I am getLoadoutForPlayer error')
     console.error('Error fetching loadout:', error)
     throw error // Handle error as needed
   }
